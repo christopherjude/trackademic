@@ -124,3 +124,8 @@ button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
+
+.card {
+  @apply p-6 rounded-lg shadow-md bg-surface-light h-[208px] w-[384px];
+}
+
