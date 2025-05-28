@@ -1,6 +1,15 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 const LoginForm = () => {
+    const navigate = useNavigate();
+
+    const handleLogin = (e: React.FormEvent) => {
+        e.preventDefault();
+        // TODO - Validate credentials, map roles
+        navigate("/student/dashboard")
+    }
+
     return (
         <div className="w-full max-w-md p-8">
             <h2 className="text-2xl font-bold text-primary mb-2">Welcome Back</h2>
@@ -8,7 +17,7 @@ const LoginForm = () => {
                 Enter your email and password to access your account.
             </p>
 
-            <form className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4">
                 <div>
                     <label className="text-sm text-secondary">Email</label>
                     <input
