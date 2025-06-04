@@ -1,6 +1,3 @@
-// components/student/UpcomingMeetingCard.tsx
-import React from 'react';
-
 const groupedMeetings = {
   '2025-06-05': [
     {

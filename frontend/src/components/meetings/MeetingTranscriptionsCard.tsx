@@ -1,5 +1,3 @@
-import React from "react";
-
 const dummyTranscriptions = [
   {
     title: "Meeting with Dr. Smith",

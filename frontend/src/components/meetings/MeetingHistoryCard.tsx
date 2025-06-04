@@ -1,5 +1,3 @@
-import React from "react";
-
 const history = [
   { date: "2025-05-20 at 3:00 PM", status: "Completed" },
   { date: "2025-05-06 at 1:00 PM", status: "Missed" },

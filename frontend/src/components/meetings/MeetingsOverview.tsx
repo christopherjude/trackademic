@@ -1,4 +1,3 @@
-import React from "react";
 import UpcomingMeetingCard from "./UpcomingMeetingCard";
 import MeetingHistoryCard from "./MeetingHistoryCard";
 import MeetingTranscriptionsCard from "./MeetingTranscriptionsCard";

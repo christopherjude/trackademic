@@ -1,5 +1,3 @@
-import React from 'react';
-
 const Hero = () => {
   return (
     <section className="relative bg-background-light py-16 px-8 overflow-hidden">

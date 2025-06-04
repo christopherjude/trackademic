@@ -1,5 +1,3 @@
-import React from 'react';
-
 const LoginInfoPanel = () => {
   return (
     <div className="flex-1 bg-primary text-white p-12 flex flex-col justify-center">
