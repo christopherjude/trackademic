@@ -1,13 +1,16 @@
+import { useMsal } from "@azure/msal-react";
 import React from "react";
-import { useNavigate } from "react-router-dom";
 
 const LoginForm = () => {
-    const navigate = useNavigate();
+    const { instance } = useMsal();
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO - Validate credentials, map roles
-        navigate("/student/dashboard")
+        try{
+            instance.loginRedirect();
+        } catch (error) {
+            console.error("Login failed:", error);
+        }
     }
 
     return (
