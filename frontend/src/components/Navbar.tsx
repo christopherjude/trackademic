@@ -9,11 +9,11 @@ const Navbar = () => {
         <li><a href="#" className="text-secondary hover:text-primary">About Us</a></li>
         <li><a href="#" className="text-secondary hover:text-primary">Contact Us</a></li>
       </ul>
-      --<Link to="/login">
+      <Link to="/login">
         <button className="bg-primary text-background-light py-2 px-6 rounded-lg shadow-lg hover:bg-secondary transition-all">
             Sign In
         </button>
-      --</Link>
+      </Link>
     </nav>
   );
 };
