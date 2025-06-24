@@ -1,15 +1,18 @@
 import { useMsal } from "@azure/msal-react";
-import React from "react";
+import React, {useState} from "react";
 
 const LoginForm = () => {
     const { instance } = useMsal();
+    const [error,setError] = useState<string | null>(null);
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
         try{
+            console.log("Calling redirect to log in...");
             instance.loginRedirect();
         } catch (error) {
             console.error("Login failed:", error);
+            setError("Email or password is incorrect.");
         }
     }
 
@@ -19,8 +22,13 @@ const LoginForm = () => {
             <p className="text-sm text-secondary mb-6">
                 Enter your email and password to access your account.
             </p>
-
-            <form onSubmit={handleLogin} className="space-y-4">
+            {error && (
+                <p className="text-red-500 text-sm mb-4">
+                    {error}
+                </p>
+            )}
+            <div className="space-y-4">
+            {/* <form onSubmit={handleLogin} className="space-y-4"> */}
                 <div>
                     <label className="text-sm text-secondary">Email</label>
                     <input
@@ -46,10 +54,11 @@ const LoginForm = () => {
                         Forgot your password?
                     </a>
                 </div>
-                <button className="w-full bg-primary text-white py-3 rounded-md hover:bg-secondary transition">
+                <button className="w-full bg-primary text-white py-3 rounded-md hover:bg-secondary transition" onClick={handleLogin}>
                     Log In
                 </button>
-            </form>
+            {/* </form> */}
+            </div>
 
             <p className="text-center text-sm mt-6 text-secondary">
                 Don’t have an account?{" "}

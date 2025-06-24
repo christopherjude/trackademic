@@ -2,7 +2,7 @@ import "@/styles/App.css";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import { Routes, Route } from "react-router-dom";
-import StudentDashboard from "./pages/student/Dashboard";
+import Dashboard from "./pages/Dashboard";
 import MainLayout from "@/layouts/MainLayout";
 import ProtectedRoute from "./layouts/ProtectedLayout";
 
@@ -19,13 +19,14 @@ function App() {
 
             { /* Protected routes with dashboard layout */}
             <Route
-                path="/student/dashboard"
+                path="/dashboard"
                 element={
                     <ProtectedRoute>
-                        <StudentDashboard />
+                        <Dashboard />
                     </ProtectedRoute>
                 }
             />
+
         </Routes>
     );
 }

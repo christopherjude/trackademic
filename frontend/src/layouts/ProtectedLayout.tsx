@@ -1,11 +1,19 @@
-import { useIsAuthenticated } from "@azure/msal-react";
-import { Navigate } from "react-router-dom";
+import { useMsal } from "@azure/msal-react"
+import { Navigate, useLocation } from "react-router-dom"
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = useIsAuthenticated();
-  console.log('DEBUG: is authenticated:', isAuthenticated);
+  const { inProgress, accounts } = useMsal()
+  const location = useLocation()
 
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
-};
+  if (inProgress !== "none") {
+    return <div>Loading authentication…</div>
+  }
 
-export default ProtectedRoute;
+  if (accounts.length === 0) {
+    return <Navigate to="/login" state={{ from: location }} replace />
+  }
+
+  return <>{children}</>
+}
+
+export default ProtectedRoute
