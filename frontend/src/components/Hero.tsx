@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 const Hero = () => {
   return (
     <section className="relative bg-background-light py-16 px-8 overflow-hidden">
@@ -13,9 +15,11 @@ const Hero = () => {
           Efficiently manage meetings, track progress, and gain insights into your academic journey with AI-powered analytics.
         </p>
         <div className="mt-8">
-          <button className="bg-primary text-background-light py-3 px-6 rounded-lg mr-4 shadow-lg hover:bg-secondary transition-all">
-            Get Started
-          </button>
+          <Link to="/login">
+            <button className="bg-primary text-background-light py-3 px-6 rounded-lg mr-4 shadow-lg hover:bg-secondary transition-all">
+              Get Started
+            </button>
+          </Link>
           <button className="text-background-light py-3 px-6 rounded-lg shadow-lg hover:bg-secondary hover:text-background-light transition-all">
             Learn More
           </button>

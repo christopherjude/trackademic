@@ -28,15 +28,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const lastName = rest.join(" ");
       const email = account.username;
 
-      const derivedRole = email.includes("s") ? "student" : "supervisor"; // or fetch from DB
+      // Get roles from ID token claims
+      let role: "student" | "supervisor" | "director" = "student"; // default
+      
+      // Check if the account has ID token claims with roles
+      if (account.idTokenClaims && account.idTokenClaims.roles) {
+        const roles = account.idTokenClaims.roles as string[];
+        
+        if (roles.includes("Director")) {
+          role = "director";
+        } else if (roles.includes("Supervisor")) {
+          role = "supervisor";
+        } else if (roles.includes("Student")) {
+          role = "student";
+        }
+      }
+
+      console.log("User roles from token:", account.idTokenClaims?.roles);
+      console.log("Assigned role:", role);
 
       setUser({
         firstName,
         lastName,
         email,
-        avatarUrl: "/avatar.png", // optional
-        role: derivedRole,
+        avatarUrl: "/avatar.png",
+        role,
       });
+    } else {
+      setUser(null);
     }
   }, [accounts]);
 

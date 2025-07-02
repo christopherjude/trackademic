@@ -2,7 +2,7 @@ import "@/styles/App.css";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import { Routes, Route } from "react-router-dom";
-import Dashboard from "./pages/Dashboard";
+import StudentDashboard from "./pages/student/Dashboard";
 import MainLayout from "@/layouts/MainLayout";
 import ProtectedRoute from "./layouts/ProtectedLayout";
 
@@ -22,7 +22,7 @@ function App() {
                 path="/dashboard"
                 element={
                     <ProtectedRoute>
-                        <Dashboard />
+                        <StudentDashboard />
                     </ProtectedRoute>
                 }
             />
