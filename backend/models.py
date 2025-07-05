@@ -11,6 +11,14 @@ class UserRole(enum.Enum):
     SUPERVISOR = "supervisor" 
     DIRECTOR = "director"
 
+class MeetingStatus(enum.Enum):
+    SCHEDULED = "scheduled"
+    STUDENT_CHECKED_IN = "student_checked_in"  # Student pressed "I'm in meeting"
+    CONFIRMED = "confirmed"  # Supervisor confirmed the meeting
+    COMPLETED = "completed"  # Meeting ended
+    CANCELLED = "cancelled"
+    MISSED = "missed"
+
 class MilestoneStatus(enum.Enum):
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
@@ -39,8 +47,12 @@ class Meeting(Base):
     title = Column(String, index=True)
     description = Column(Text)
     scheduled_at = Column(DateTime)
-    duration_minutes = Column(Integer, default=60)
+    duration_minutes = Column(Integer, default=60)  # Planned duration
+    actual_start_time = Column(DateTime, nullable=True)  # When student checked in
+    actual_end_time = Column(DateTime, nullable=True)   # When meeting ended
+    actual_duration_minutes = Column(Integer, nullable=True)  # Calculated actual duration
     location = Column(String)
+    status = Column(Enum(MeetingStatus), default=MeetingStatus.SCHEDULED)
     student_id = Column(Integer, ForeignKey("users.id"))
     supervisor_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime, default=datetime.utcnow)

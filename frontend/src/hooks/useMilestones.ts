@@ -21,7 +21,7 @@ export function useMilestones() {
     try {
       setLoading(true);
       setError(null);
-      const data = await apiClient.getMilestones();
+      const data = await apiClient.getMilestones() as Milestone[];
       setMilestones(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch milestones");
@@ -32,7 +32,7 @@ export function useMilestones() {
 
   const createMilestone = async (milestone: Omit<Milestone, "id" | "created_at" | "completed_at" | "status">) => {
     try {
-      const newMilestone = await apiClient.createMilestone(milestone);
+      const newMilestone = await apiClient.createMilestone(milestone) as Milestone;
       setMilestones((prev: Milestone[]) => [...prev, newMilestone]);
       return newMilestone;
     } catch (err) {
@@ -42,7 +42,7 @@ export function useMilestones() {
 
   const updateMilestone = async (id: number, updates: Partial<Milestone>) => {
     try {
-      const updatedMilestone = await apiClient.updateMilestone(id, updates);
+      const updatedMilestone = await apiClient.updateMilestone(id, updates) as Milestone;
       setMilestones((prev: Milestone[]) => 
         prev.map(milestone => milestone.id === id ? updatedMilestone : milestone)
       );

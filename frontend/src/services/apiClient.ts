@@ -11,11 +11,25 @@ class ApiClient {
 
   private async getAccessToken(): Promise<string> {
     try {
-      // For development, return a mock token
-      // In production, you'd use: await this.msalInstance.acquireTokenSilent({...})
+      if (this.msalInstance && this.account) {
+        // Try to acquire token silently
+        const request = {
+          scopes: ["User.Read"], // Add your API scopes here
+          account: this.account,
+        };
+        
+        const response = await this.msalInstance.acquireTokenSilent(request);
+        return response.accessToken;
+      }
+      
+      // For development without MSAL, return a mock token
+      // In production, this should throw an error
+      console.warn("Using mock token for development");
       return "mock-token";
     } catch (error) {
-      throw new Error("Failed to acquire access token");
+      console.error("Failed to acquire access token:", error);
+      // For development, fallback to mock token
+      return "mock-token";
     }
   }
 
@@ -78,6 +92,31 @@ class ApiClient {
     return this.request(`/milestones/${id}`, {
       method: "PUT",
       body: JSON.stringify(updates),
+    });
+  }
+
+  // Meeting workflow endpoints
+  async checkIntoMeeting(meetingId: number) {
+    return this.request(`/meetings/${meetingId}/checkin`, {
+      method: "POST",
+    });
+  }
+
+  async confirmMeeting(meetingId: number) {
+    return this.request(`/meetings/${meetingId}/confirm`, {
+      method: "POST",
+    });
+  }
+
+  async endMeeting(meetingId: number) {
+    return this.request(`/meetings/${meetingId}/end`, {
+      method: "POST",
+    });
+  }
+
+  async markMeetingMissed(meetingId: number) {
+    return this.request(`/meetings/${meetingId}/mark-missed`, {
+      method: "POST",
     });
   }
 }
