@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional, List
-from models import UserRole, MilestoneStatus
+from models import UserRole, MilestoneStatus, MeetingStatus
 
 # User schemas
 class UserBase(BaseModel):
@@ -32,9 +32,11 @@ class MeetingBase(BaseModel):
 class MeetingCreate(MeetingBase):
     student_id: int
     supervisor_id: int
+    status: Optional[MeetingStatus] = MeetingStatus.PENDING
 
 class Meeting(MeetingBase):
     id: int
+    status: MeetingStatus
     student_id: int
     supervisor_id: int
     created_at: datetime

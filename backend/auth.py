@@ -12,13 +12,13 @@ security = HTTPBearer()
 # In production, you'd validate against Azure AD's public keys
 def decode_token(token: str):
     try:
-        # For development - just return mock user data
+        # For development - return Alice Studyalot's data to match seeded users
         # In production, validate against Azure AD
         return {
-            "oid": "mock-user-id",
-            "email": "test@example.com",
-            "given_name": "Test",
-            "family_name": "User"
+            "oid": "alice-studyalot-oid",
+            "email": "alice@trackademic.uk",
+            "given_name": "Alice",
+            "family_name": "Studyalot"
         }
     except JWTError:
         raise HTTPException(

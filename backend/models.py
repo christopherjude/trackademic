@@ -16,6 +16,13 @@ class MilestoneStatus(enum.Enum):
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
 
+class MeetingStatus(enum.Enum):
+    PENDING = "pending"
+    CONFIRMED = "confirmed"
+    COMPLETED = "completed"
+    MISSED = "missed"
+    CANCELLED = "cancelled"
+
 class User(Base):
     __tablename__ = "users"
     
@@ -41,6 +48,7 @@ class Meeting(Base):
     scheduled_at = Column(DateTime)
     duration_minutes = Column(Integer, default=60)
     location = Column(String)
+    status = Column(Enum(MeetingStatus), default=MeetingStatus.PENDING)
     student_id = Column(Integer, ForeignKey("users.id"))
     supervisor_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime, default=datetime.utcnow)

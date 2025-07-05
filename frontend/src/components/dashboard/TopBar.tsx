@@ -32,7 +32,7 @@ const Topbar: React.FC<TopbarProps> = ({ firstName, lastName, role, avatarUrl })
     const handleLogout = async () => {
         try {
             await instance.logoutRedirect({
-                postLogoutRedirectUri: window.location.origin,
+                postLogoutRedirectUri: import.meta.env.VITE_APP_URL || window.location.origin,
             });
         } catch (error) {
             console.error("Logout failed:", error);
