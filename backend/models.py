@@ -12,12 +12,12 @@ class UserRole(enum.Enum):
     DIRECTOR = "director"
 
 class MeetingStatus(enum.Enum):
-    SCHEDULED = "scheduled"
-    STUDENT_CHECKED_IN = "student_checked_in"  # Student pressed "I'm in meeting"
-    CONFIRMED = "confirmed"  # Supervisor confirmed the meeting
-    COMPLETED = "completed"  # Meeting ended
-    CANCELLED = "cancelled"
-    MISSED = "missed"
+    SCHEDULED = "SCHEDULED"
+    STUDENT_CHECKED_IN = "STUDENT_CHECKED_IN"  # Student pressed "I'm in meeting"
+    CONFIRMED = "CONFIRMED"  # Supervisor confirmed the meeting
+    COMPLETED = "COMPLETED"  # Meeting ended
+    CANCELLED = "CANCELLED"
+    MISSED = "MISSED"
 
 class MilestoneStatus(enum.Enum):
     PENDING = "pending"

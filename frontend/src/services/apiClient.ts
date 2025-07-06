@@ -22,14 +22,17 @@ class ApiClient {
         return response.accessToken;
       }
       
-      // For development without MSAL, return a mock token
-      // In production, this should throw an error
-      console.warn("Using mock token for development");
-      return "mock-token";
+      // For development without MSAL, use Alice's token by default
+      // You can change this to test different users:
+      // "alice-token" for Alice (student)
+      // "bob-token" for Bob (supervisor) 
+      // "candice-token" for Candice (director)
+      console.warn("Using development token for Alice");
+      return "alice-token";
     } catch (error) {
       console.error("Failed to acquire access token:", error);
-      // For development, fallback to mock token
-      return "mock-token";
+      // For development, fallback to Alice's token
+      return "alice-token";
     }
   }
 
@@ -37,14 +40,12 @@ class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const token = await this.getAccessToken();
     const url = `${API_BASE_URL}${endpoint}`;
 
     const config: RequestInit = {
       ...options,
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
         ...options.headers,
       },
     };

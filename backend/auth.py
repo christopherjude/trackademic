@@ -5,21 +5,53 @@ from sqlalchemy.orm import Session
 from database import get_db
 import models
 import schemas
+import os
 
 security = HTTPBearer()
 
-# For development, we'll create a simple token validation
-# In production, you'd validate against Azure AD's public keys
+# Development mode check
+DEVELOPMENT_MODE = os.getenv("DEVELOPMENT_MODE", "true").lower() == "true"
+
 def decode_token(token: str):
     try:
-        # For development - just return mock user data
-        # In production, validate against Azure AD
-        return {
-            "oid": "mock-user-id",
-            "email": "test@example.com",
-            "given_name": "Test",
-            "family_name": "User"
-        }
+        if DEVELOPMENT_MODE:
+            # For development - map tokens to specific users
+            user_mapping = {
+                "alice-token": {
+                    "oid": "alice-azure-oid-123",
+                    "email": "alice@trackademic.uk",
+                    "given_name": "Alice",
+                    "family_name": "Studyalot"
+                },
+                "bob-token": {
+                    "oid": "bob-azure-oid-456",
+                    "email": "bob@trackademic.uk",
+                    "given_name": "Bob",
+                    "family_name": "Teachalot"
+                },
+                "candice-token": {
+                    "oid": "candice-azure-oid-789",
+                    "email": "candice@trackademic.uk",
+                    "given_name": "Candice",
+                    "family_name": "Adminalot"
+                }
+            }
+            
+            if token in user_mapping:
+                return user_mapping[token]
+            else:
+                # Default to Alice for any other token in development
+                return user_mapping["alice-token"]
+        else:
+            # Production: validate against Azure AD
+            # TODO: Implement proper Azure AD token validation
+            # For now, return mock data
+            return {
+                "oid": "azure-oid-from-token",
+                "email": "user@trackademic.uk",
+                "given_name": "Production",
+                "family_name": "User"
+            }
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -37,17 +69,11 @@ def get_current_user(
     # Try to find user by Azure OID
     user = db.query(models.User).filter(models.User.azure_oid == payload["oid"]).first()
     
-    # If user doesn't exist, create them
     if not user:
-        user = models.User(
-            azure_oid=payload["oid"],
-            email=payload["email"],
-            first_name=payload["given_name"],
-            last_name=payload["family_name"],
-            role=models.UserRole.STUDENT  # Default role
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User not found with OID: {payload['oid']}"
         )
-        db.add(user)
-        db.commit()
         db.refresh(user)
     
     return user
