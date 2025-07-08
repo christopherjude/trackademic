@@ -15,7 +15,7 @@ const StudentDashboard = () => {
         avatarUrl: user?.avatarUrl || "/avatar.png" 
       }}
     >
-    <MeetingsOverview />
+      <MeetingsOverview />
     </DashboardLayout>
   );
 };

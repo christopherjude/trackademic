@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { apiClient } from "../services/apiClient";
+import { useAuth } from "../context/AuthContext";
 
 export interface Meeting {
   id: number;
@@ -30,11 +30,18 @@ export interface Meeting {
 }
 
 export function useMeetings() {
+  const { apiClient } = useAuth();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchMeetings = async () => {
+    if (!apiClient) {
+      setError("API client not available");
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -48,6 +55,8 @@ export function useMeetings() {
   };
 
   const createMeeting = async (meeting: Omit<Meeting, "id" | "created_at" | "student" | "supervisor">) => {
+    if (!apiClient) throw new Error("API client not available");
+    
     try {
       const newMeeting = await apiClient.createMeeting(meeting) as Meeting;
       setMeetings((prev: Meeting[]) => [...prev, newMeeting]);
@@ -58,6 +67,8 @@ export function useMeetings() {
   };
 
   const checkIntoMeeting = async (meetingId: number) => {
+    if (!apiClient) throw new Error("API client not available");
+    
     try {
       const updatedMeeting = await apiClient.checkIntoMeeting(meetingId) as Meeting;
       setMeetings((prev: Meeting[]) => 
@@ -70,6 +81,8 @@ export function useMeetings() {
   };
 
   const confirmMeeting = async (meetingId: number) => {
+    if (!apiClient) throw new Error("API client not available");
+    
     try {
       const updatedMeeting = await apiClient.confirmMeeting(meetingId) as Meeting;
       setMeetings((prev: Meeting[]) => 
@@ -82,6 +95,8 @@ export function useMeetings() {
   };
 
   const endMeeting = async (meetingId: number) => {
+    if (!apiClient) throw new Error("API client not available");
+    
     try {
       const updatedMeeting = await apiClient.endMeeting(meetingId) as Meeting;
       setMeetings((prev: Meeting[]) => 
@@ -94,6 +109,8 @@ export function useMeetings() {
   };
 
   const markMeetingMissed = async (meetingId: number) => {
+    if (!apiClient) throw new Error("API client not available");
+    
     try {
       const updatedMeeting = await apiClient.markMeetingMissed(meetingId) as Meeting;
       setMeetings((prev: Meeting[]) => 
@@ -106,8 +123,10 @@ export function useMeetings() {
   };
 
   useEffect(() => {
-    fetchMeetings();
-  }, []);
+    if (apiClient) {
+      fetchMeetings();
+    }
+  }, [apiClient]);
 
   return {
     meetings,

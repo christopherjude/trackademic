@@ -18,9 +18,9 @@ try:
     db.query(Meeting).delete()
     db.query(User).delete()
     
-    # Create users
+    # Create users with real Azure AD Object IDs
     alice = User(
-        azure_oid="alice-azure-oid-123",
+        azure_oid="40d163bd-3b0e-4212-b603-14740eadd08b",
         email="alice@trackademic.uk",
         first_name="Alice",
         last_name="Studyalot",
@@ -28,7 +28,7 @@ try:
     )
     
     bob = User(
-        azure_oid="bob-azure-oid-456", 
+        azure_oid="24b769ca-f058-4c5d-b0a3-87788283fd5d",
         email="bob@trackademic.uk",
         first_name="Bob",
         last_name="Teachalot",
@@ -36,7 +36,7 @@ try:
     )
     
     candice = User(
-        azure_oid="candice-azure-oid-789",
+        azure_oid="629a0e01-39b7-483e-afa5-f8aa354cd285",
         email="candice@trackademic.uk", 
         first_name="Candice",
         last_name="Adminalot",

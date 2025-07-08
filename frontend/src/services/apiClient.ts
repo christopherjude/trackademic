@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8000/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
 
 class ApiClient {
   private msalInstance?: any;
@@ -9,12 +9,12 @@ class ApiClient {
     this.account = account;
   }
 
-  private async getAccessToken(): Promise<string> {
+  private async getAccessToken(): Promise<string | null> {
     try {
       if (this.msalInstance && this.account) {
-        // Try to acquire token silently
+        const clientId = import.meta.env.VITE_AZURE_CLIENT_ID;
         const request = {
-          scopes: ["User.Read"], // Add your API scopes here
+          scopes: [`api://${clientId}/access_as_user`],
           account: this.account,
         };
         
@@ -22,17 +22,10 @@ class ApiClient {
         return response.accessToken;
       }
       
-      // For development without MSAL, use Alice's token by default
-      // You can change this to test different users:
-      // "alice-token" for Alice (student)
-      // "bob-token" for Bob (supervisor) 
-      // "candice-token" for Candice (director)
-      console.warn("Using development token for Alice");
-      return "alice-token";
+      throw new Error("No MSAL instance or account available");
     } catch (error) {
       console.error("Failed to acquire access token:", error);
-      // For development, fallback to Alice's token
-      return "alice-token";
+      throw new Error("Authentication required");
     }
   }
 
@@ -41,11 +34,13 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
+    const token = await this.getAccessToken();
 
     const config: RequestInit = {
       ...options,
       headers: {
         "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },
     };
@@ -122,10 +117,10 @@ class ApiClient {
   }
 }
 
-// Export a simple API client for now
+// Export a global API client instance
 export const apiClient = new ApiClient();
 
-// For MSAL integration, you can create this hook later
-export function createApiClient() {
-  return new ApiClient();
+// Function to create API client with MSAL integration
+export function createApiClient(msalInstance?: any, account?: any) {
+  return new ApiClient(msalInstance, account);
 }

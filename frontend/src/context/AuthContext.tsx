@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useMsal } from "@azure/msal-react";
 import { AccountInfo } from "@azure/msal-browser";
+import { createApiClient } from "../services/apiClient";
 
 interface User {
   firstName: string;
@@ -12,13 +13,15 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
+  apiClient: any;
 }
 
-const AuthContext = createContext<AuthContextType>({ user: null });
+const AuthContext = createContext<AuthContextType>({ user: null, apiClient: null });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const { accounts } = useMsal();
+  const { instance, accounts } = useMsal();
   const [user, setUser] = useState<User | null>(null);
+  const [apiClient, setApiClient] = useState<any>(null);
 
   useEffect(() => {
     if (accounts.length > 0) {
@@ -27,6 +30,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const [firstName, ...rest] = fullName.split(" "); 
       const lastName = rest.join(" ");
       const email = account.username;
+
+      // Create API client with MSAL integration
+      const client = createApiClient(instance, account);
+      setApiClient(client);
 
       // Get roles from ID token claims
       let role: "student" | "supervisor" | "director" = "student"; // default
@@ -56,11 +63,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
     } else {
       setUser(null);
+      setApiClient(null);
     }
-  }, [accounts]);
+  }, [instance, accounts]);
 
   return (
-    <AuthContext.Provider value={{ user }}>
+    <AuthContext.Provider value={{ user, apiClient }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,79 +1,156 @@
-from fastapi import Depends, HTTPException, status
+import os
+import jwt
+import requests
+from typing import Dict, Any
+from fastapi import HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from database import get_db
-import models
-import schemas
-import os
+from models import User
+from functools import lru_cache
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 security = HTTPBearer()
 
-# Development mode check
-DEVELOPMENT_MODE = os.getenv("DEVELOPMENT_MODE", "true").lower() == "true"
+AZURE_TENANT_ID = os.getenv("AZURE_TENANT_ID")
+AZURE_CLIENT_ID = os.getenv("AZURE_CLIENT_ID")
 
-def decode_token(token: str):
+if not AZURE_TENANT_ID:
+    print("Warning: AZURE_TENANT_ID not set - authentication will not work")
+if not AZURE_CLIENT_ID:
+    print("Warning: AZURE_CLIENT_ID not set - authentication will not work")
+
+@lru_cache(maxsize=1)
+def get_azure_public_keys():
+    """
+    Fetch Azure AD public keys for JWT validation.
+    Cached to avoid repeated requests.
+    """
     try:
-        if DEVELOPMENT_MODE:
-            # For development - map tokens to specific users
-            user_mapping = {
-                "alice-token": {
-                    "oid": "alice-azure-oid-123",
-                    "email": "alice@trackademic.uk",
-                    "given_name": "Alice",
-                    "family_name": "Studyalot"
-                },
-                "bob-token": {
-                    "oid": "bob-azure-oid-456",
-                    "email": "bob@trackademic.uk",
-                    "given_name": "Bob",
-                    "family_name": "Teachalot"
-                },
-                "candice-token": {
-                    "oid": "candice-azure-oid-789",
-                    "email": "candice@trackademic.uk",
-                    "given_name": "Candice",
-                    "family_name": "Adminalot"
-                }
-            }
-            
-            if token in user_mapping:
-                return user_mapping[token]
-            else:
-                # Default to Alice for any other token in development
-                return user_mapping["alice-token"]
-        else:
-            # Production: validate against Azure AD
-            # TODO: Implement proper Azure AD token validation
-            # For now, return mock data
-            return {
-                "oid": "azure-oid-from-token",
-                "email": "user@trackademic.uk",
-                "given_name": "Production",
-                "family_name": "User"
-            }
-    except JWTError:
+        jwks_url = f"https://login.microsoftonline.com/{AZURE_TENANT_ID}/discovery/v2.0/keys"
+        response = requests.get(jwks_url, timeout=10)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Could not fetch Azure AD public keys: {e}"
         )
 
-def get_current_user(
+def validate_azure_jwt(token: str) -> Dict[str, Any]:
+    """
+    Validate Azure AD JWT token and return claims.
+    """
+    try:
+        # Get public keys
+        jwks = get_azure_public_keys()
+        
+        # Decode token header to get key ID
+        unverified_header = jwt.get_unverified_header(token)
+        kid = unverified_header.get("kid")
+        
+        # Find the matching public key
+        public_key = None
+        for key in jwks.get("keys", []):
+            if key.get("kid") == kid:
+                public_key = jwt.algorithms.RSAAlgorithm.from_jwk(key)
+                break
+        
+        if not public_key:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token: key not found"
+            )
+        
+        # First, decode without audience validation to check what type of token this is
+        payload = jwt.decode(
+            token,
+            public_key,
+            algorithms=["RS256"],
+            options={"verify_aud": False, "verify_iss": False}
+        )
+        
+        # Validate issuer
+        actual_issuer = payload.get('iss')
+        expected_issuers = [
+            f"https://login.microsoftonline.com/{AZURE_TENANT_ID}/v2.0",
+            f"https://sts.windows.net/{AZURE_TENANT_ID}/",
+            f"https://login.microsoftonline.com/{AZURE_TENANT_ID}/"
+        ]
+        
+        if actual_issuer not in expected_issuers:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Invalid issuer: {actual_issuer}"
+            )
+        
+        # Check the audience - accept our custom API scope
+        audience = payload.get("aud")
+        valid_audiences = [
+            f"api://{AZURE_CLIENT_ID}",  # Our custom API scope
+            AZURE_CLIENT_ID,  # Our app (fallback)
+            "00000003-0000-0000-c000-000000000000",  # Microsoft Graph (fallback)
+        ]
+        
+        if audience not in valid_audiences:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Invalid audience: {audience}"
+            )
+        
+        return payload
+        
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired"
+        )
+    except jwt.InvalidTokenError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid token: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Token validation failed: {str(e)}"
+        )
+
+async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
-) -> models.User:
-    token = credentials.credentials
-    payload = decode_token(token)
+) -> User:
+    """
+    Get current user from Azure AD JWT token.
+    Validates the token and looks up the user in the database.
+    """
+    if not credentials or not credentials.credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required"
+        )
     
-    # Try to find user by Azure OID
-    user = db.query(models.User).filter(models.User.azure_oid == payload["oid"]).first()
+    # Validate Azure AD JWT token
+    payload = validate_azure_jwt(credentials.credentials)
+    azure_oid = payload.get("oid")
+    email = payload.get("email") or payload.get("preferred_username")
+    
+    # Look up user by Azure OID first (most reliable)
+    user = None
+    if azure_oid:
+        user = db.query(User).filter(User.azure_oid == azure_oid).first()
+    
+    # Fallback to email lookup
+    if not user and email:
+        user = db.query(User).filter(User.email == email).first()
     
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User not found with OID: {payload['oid']}"
+            detail="User not found in database"
         )
-        db.refresh(user)
     
     return user
