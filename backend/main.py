@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime
 
-# Backend deployment trigger - updated for Azure deployment - v2
+# Backend deployment trigger - updated for Azure deployment with gunicorn
 import models
 import schemas
 from database import get_db, create_tables
