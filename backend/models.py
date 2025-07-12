@@ -22,6 +22,7 @@ class MeetingStatus(enum.Enum):
     COMPLETED = "completed"
     MISSED = "missed"
     CANCELLED = "cancelled"
+    SCHEDULED = "scheduled"
 
 class User(Base):
     __tablename__ = "users"
