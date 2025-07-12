@@ -122,6 +122,23 @@ export function useMeetings() {
     }
   };
 
+  const fetchMeetingHistory = () => {
+    return meetings
+      .filter(meeting => {
+        const isPast = new Date(meeting.scheduled_at) < new Date();
+        const status = (meeting.status || '').toLowerCase();
+        return isPast && (status === 'completed' || status === 'missed');
+      })
+      .sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime())
+      .slice(0, 10);
+  };
+
+  const getInProgressMeeting = () => {
+    return meetings.find(
+      (meeting) => (meeting.status || '').toLowerCase() === 'in_progress'
+    );
+  };
+
   useEffect(() => {
     if (apiClient) {
       fetchMeetings();
@@ -138,5 +155,7 @@ export function useMeetings() {
     confirmMeeting,
     endMeeting,
     markMeetingMissed,
+    fetchMeetingHistory,
+    getInProgressMeeting,
   };
 }

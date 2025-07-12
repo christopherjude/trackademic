@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       // 2️⃣ handle redirect response (login or silent renew)
       const redirectResult = await msalInstance.handleRedirectPromise();
+      console.log('[MSAL] handleRedirectPromise result:', redirectResult);
       if (redirectResult?.account) {
         msalInstance.setActiveAccount(redirectResult.account);
       }

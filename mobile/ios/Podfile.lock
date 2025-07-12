@@ -1,0 +1,44 @@
+PODS:
+  - Flutter (1.0.0)
+  - flutter_secure_storage (6.0.0):
+    - Flutter
+  - MSAL (1.2.5):
+    - MSAL/app-lib (= 1.2.5)
+  - MSAL/app-lib (1.2.5)
+  - msal_flutter (1.0.2):
+    - Flutter
+    - MSAL (~> 1.2.0)
+  - path_provider_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
+  - msal_flutter (from `.symlinks/plugins/msal_flutter/ios`)
+  - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
+
+SPEC REPOS:
+  trunk:
+    - MSAL
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  flutter_secure_storage:
+    :path: ".symlinks/plugins/flutter_secure_storage/ios"
+  msal_flutter:
+    :path: ".symlinks/plugins/msal_flutter/ios"
+  path_provider_foundation:
+    :path: ".symlinks/plugins/path_provider_foundation/darwin"
+
+SPEC CHECKSUMS:
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  flutter_secure_storage: 1ed9476fba7e7a782b22888f956cce43e2c62f13
+  MSAL: 5149daaa19228c2c27d81987634da15b50981cef
+  msal_flutter: c2d87b15d5176b31f495fb7ae632c56299dbdc96
+  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
+
+PODFILE CHECKSUM: 4305caec6b40dde0ae97be1573c53de1882a07e5
+
+COCOAPODS: 1.16.2

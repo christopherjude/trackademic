@@ -74,6 +74,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             }
           }
 
+          // Debug: Log user info and token claims
+          console.log("[AuthContext] Signed-in user:", {
+            name: fullName,
+            email,
+            role,
+            idTokenClaims: account.idTokenClaims
+          });
+
           setUser({
             id: 0, // Fallback ID when backend is unavailable
             firstName,

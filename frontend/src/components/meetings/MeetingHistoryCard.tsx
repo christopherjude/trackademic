@@ -20,13 +20,9 @@ const getStatusColor = (status: string) => {
 };
 
 const MeetingHistoryCard = () => {
-  const { meetings, loading, error } = useMeetings();
+  const { fetchMeetingHistory, loading, error } = useMeetings();
 
-  // Filter for past meetings (previous dates) and sort by date descending
-  const pastMeetings = meetings
-    .filter(meeting => new Date(meeting.scheduled_at) < new Date())
-    .sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime())
-    .slice(0, 10); // Show only last 10 meetings
+  const pastMeetings = fetchMeetingHistory();
 
   return (
     <div className="flex-col">
