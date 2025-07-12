@@ -4,18 +4,31 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'frontend/**'
-      - 'backend/**'
-      - '.github/workflows/mono-ci.yml'
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
       - main
 
 jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.changes.outputs.frontend }}
+      backend: ${{ steps.changes.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+            backend:
+              - 'backend/**'
+
   frontend:
-    if: github.event_name == 'push' && (contains(github.event.head_commit.modified, 'frontend/') || contains(github.event.head_commit.added, 'frontend/')) || github.event_name == 'pull_request'
+    needs: check-changes
+    if: needs.check-changes.outputs.frontend == 'true' || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     name: Frontend Build & Deploy
     steps:
@@ -35,7 +48,8 @@ jobs:
           output_location: "dist"
 
   backend:
-    if: github.event_name == 'push' && (contains(github.event.head_commit.modified, 'backend/') || contains(github.event.head_commit.added, 'backend/')) || github.event_name == 'pull_request'
+    needs: check-changes
+    if: needs.check-changes.outputs.backend == 'true' || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     name: Backend Build & Deploy
     env:
