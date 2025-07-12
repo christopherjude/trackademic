@@ -1,61 +1,50 @@
-const groupedMeetings = {
-  '2025-06-05': [
-    {
-      title: 'Meeting with Dr. Smith',
-      time: '10:00 AM',
-      description: 'Discuss milestone progress and feedback.',
-      status: 'Pending',
-    },
-    {
-      title: 'Check-In with Supervisor',
-      time: '3:00 PM',
-      description: 'Brief sync on progress.',
-      status: 'Pending',
-    },
-  ],
-  '2025-06-06': [
-    {
-      title: 'Milestone Review',
-      time: '1:00 PM',
-      description: 'Detailed review of deliverables.',
-      status: 'Confirmed',
-    },
-  ],
-};
+import { useMeetings } from "../../hooks/useMeetings";
+import MeetingControls from "./MeetingControls";
 
 const UpcomingMeetingCard = () => {
+  const { meetings, loading, error } = useMeetings();
+
+  // Filter for upcoming meetings (future dates)
+  const upcomingMeetings = meetings.filter(meeting => 
+    new Date(meeting.scheduled_at) > new Date()
+  ).slice(0, 5); // Show only next 5 meetings
+
   return (
     <div className='flex-col'>
-    <h2 className="text-xl font-semibold text-primary mb-4">Upcoming Meetings</h2>
-    <div className="bg-surface p-4 rounded-lg shadow-md w-full h-full overflow-y-auto max-h-[300px]">
-      {Object.entries(groupedMeetings).map(([date, meetings]) => {
-        const d = new Date(date);
-        const day = d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-        const dateNum = d.getDate();
-
-        return (
-          <div key={date} className="mb-6">
-            <div className="flex items-center gap-4 mb-2">
-              <div className="text-center text-primary font-medium">
-                <div className="text-xs">{day}</div>
-                <div className="text-xl font-bold">{dateNum}</div>
-              </div>
-              <div className="flex-1 border-t border-muted"></div>
-            </div>
-            {meetings.map((meeting, idx) => (
-              <div
-                key={idx}
-                className="bg-background-light rounded-lg p-4 mb-3 shadow-sm border-l-4 border-primary"
-              >
-                <div className="font-semibold text-primary">{meeting.title}</div>
-                <div className="text-sm text-secondary">{meeting.time}</div>
-                <div className="text-sm text-secondary">{meeting.description}</div>
+      <h2 className="text-xl font-semibold text-primary mb-4">Upcoming Meetings</h2>
+      <div className="bg-surface p-4 rounded-lg shadow-md w-full h-full overflow-y-auto max-h-[300px]">
+        {loading ? (
+          <div className="text-gray-500">Loading meetings...</div>
+        ) : error ? (
+          <div className="text-red-500">Error: {error}</div>
+        ) : upcomingMeetings.length === 0 ? (
+          <div className="text-gray-500">No upcoming meetings</div>
+        ) : (
+          <div className="space-y-4">
+            {upcomingMeetings.map((meeting) => (
+              <div key={meeting.id} className="border-b border-gray-200 pb-3 last:border-b-0">
+                <h3 className="font-semibold text-primary">{meeting.title}</h3>
+                <p className="text-sm text-gray-600 mt-1">{meeting.description}</p>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-xs text-gray-500">
+                    {new Date(meeting.scheduled_at).toLocaleDateString()} at{" "}
+                    {new Date(meeting.scheduled_at).toLocaleTimeString([], { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
+                  </span>
+                  <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">
+                    {meeting.status === 'student_checked_in' ? 'Student Checked In' : 
+                     meeting.status === 'confirmed' ? 'Confirmed' :
+                     meeting.status || 'Pending'}
+                  </span>
+                </div>
+                <MeetingControls meeting={meeting} />
               </div>
             ))}
           </div>
-        );
-      })}
-    </div>
+        )}
+      </div>
     </div>
   );
 };

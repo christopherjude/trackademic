@@ -1,0 +1,16 @@
+{
+  "api": {
+    "oauth2PermissionScopes": [
+      {
+        "id": "961ea190-f02e-41e4-b5cc-7014f3f253e8",
+        "adminConsentDescription": "Allow the application to access Trackademic on behalf of the signed-in user.",
+        "adminConsentDisplayName": "Access Trackademic",
+        "isEnabled": true,
+        "type": "User",
+        "userConsentDescription": "Allow the application to access Trackademic on your behalf.",
+        "userConsentDisplayName": "Access Trackademic",
+        "value": "access_as_user"
+      }
+    ]
+  }
+}

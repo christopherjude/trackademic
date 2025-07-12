@@ -1,3 +1,6 @@
+import os
+import requests
+from typing import Dict, Any
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
@@ -12,7 +15,7 @@ security = HTTPBearer()
 # In production, you'd validate against Azure AD's public keys
 def decode_token(token: str):
     try:
-        # For development - return Alice Studyalot's data to match seeded users
+        # For development - just return mock user data
         # In production, validate against Azure AD
         return {
             "oid": "alice-studyalot-oid",

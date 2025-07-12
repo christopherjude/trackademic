@@ -5,7 +5,7 @@ export const msalConfig = {
   auth: {
     clientId: "f3c9699a-4b52-414f-b92c-a4922f8304f5",
     authority: "https://login.microsoftonline.com/77040219-1098-4565-850f-f21d083689bb",
-    redirectUri: import.meta.env.VITE_REDIRECT_URI || window.location.origin + "/dashboard",
+    redirectUri: import.meta.env.VITE_AZURE_REDIRECT_URI || window.location.origin + "/dashboard",
   },
   cache: {
     cacheLocation: "localStorage",
@@ -20,7 +20,7 @@ export const loginRequest: PopupRequest = {
 
 // API configuration for local backend
 export const apiConfig = {
-  baseUrl: "http://localhost:8000/api",
+  baseUrl: import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api",
 };
 
 // Graph configuration

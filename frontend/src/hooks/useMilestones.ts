@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { apiClient } from "../services/apiClient";
+import { useAuth } from "../context/AuthContext";
 
 export interface Milestone {
   id: number;
@@ -13,15 +13,22 @@ export interface Milestone {
 }
 
 export function useMilestones() {
+  const { apiClient } = useAuth();
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchMilestones = async () => {
+    if (!apiClient) {
+      setError("API client not available");
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
-      const data = await apiClient.getMilestones();
+      const data = await apiClient.getMilestones() as Milestone[];
       setMilestones(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch milestones");
@@ -31,8 +38,10 @@ export function useMilestones() {
   };
 
   const createMilestone = async (milestone: Omit<Milestone, "id" | "created_at" | "completed_at" | "status">) => {
+    if (!apiClient) throw new Error("API client not available");
+    
     try {
-      const newMilestone = await apiClient.createMilestone(milestone);
+      const newMilestone = await apiClient.createMilestone(milestone) as Milestone;
       setMilestones((prev: Milestone[]) => [...prev, newMilestone]);
       return newMilestone;
     } catch (err) {
@@ -41,8 +50,10 @@ export function useMilestones() {
   };
 
   const updateMilestone = async (id: number, updates: Partial<Milestone>) => {
+    if (!apiClient) throw new Error("API client not available");
+    
     try {
-      const updatedMilestone = await apiClient.updateMilestone(id, updates);
+      const updatedMilestone = await apiClient.updateMilestone(id, updates) as Milestone;
       setMilestones((prev: Milestone[]) => 
         prev.map(milestone => milestone.id === id ? updatedMilestone : milestone)
       );
@@ -53,8 +64,10 @@ export function useMilestones() {
   };
 
   useEffect(() => {
-    fetchMilestones();
-  }, []);
+    if (apiClient) {
+      fetchMilestones();
+    }
+  }, [apiClient]);
 
   return {
     milestones,

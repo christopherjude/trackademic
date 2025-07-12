@@ -28,6 +28,7 @@ class MeetingBase(BaseModel):
     scheduled_at: datetime
     duration_minutes: int = 60
     location: Optional[str] = None
+    status: MeetingStatus = MeetingStatus.SCHEDULED
 
 class MeetingCreate(MeetingBase):
     student_id: int
@@ -39,12 +40,27 @@ class Meeting(MeetingBase):
     status: MeetingStatus
     student_id: int
     supervisor_id: int
+    actual_start_time: Optional[datetime] = None
+    actual_end_time: Optional[datetime] = None
+    actual_duration_minutes: Optional[int] = None
     created_at: datetime
     student: User
     supervisor: User
     
     class Config:
         from_attributes = True
+
+class MeetingCheckIn(BaseModel):
+    """Schema for student checking into a meeting"""
+    pass
+
+class MeetingConfirm(BaseModel):
+    """Schema for supervisor confirming a meeting"""
+    pass
+
+class MeetingEnd(BaseModel):
+    """Schema for ending a meeting"""
+    pass
 
 # Milestone schemas
 class MilestoneBase(BaseModel):

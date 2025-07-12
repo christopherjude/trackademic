@@ -1,60 +1,67 @@
-const dummyTranscriptions = [
-  {
-    title: "Meeting with Dr. Smith",
-    time: "2025-05-20 at 3:00 PM",
-    summary: "Discussed milestone progress and outlined next deliverables.",
-    highlights: ["Reviewed research goals", "Discussed upcoming deadlines"],
-    actionItems: ["Submit revised abstract", "Share reading list by Friday"],
-  },
-  {
-    title: "Check-In with Supervisor",
-    time: "2025-05-06 at 1:00 PM",
-    summary: "Quick review of last week's tasks and blockers.",
-    highlights: ["Reviewed progress on literature review"],
-    actionItems: ["Finish Zotero tagging", "Draft intro paragraph"],
-  },
-  {
-    title: "Initial Planning Meeting",
-    time: "2025-04-22 at 11:00 AM",
-    summary: "Kickoff meeting to align expectations and tools.",
-    highlights: ["Set up shared Notion board", "Agreed on weekly check-ins"],
-    actionItems: ["Schedule recurring meetings", "Upload initial notes"],
-  },
-];
+import { useMeetings } from "../../hooks/useMeetings";
 
 const MeetingTranscriptionsCard = () => {
+  const { meetings, loading, error } = useMeetings();
+
+  // Filter for completed meetings that would have transcriptions
+  const completedMeetings = meetings
+    .filter(meeting => 
+      meeting.status?.toLowerCase() === 'completed' || 
+      new Date(meeting.scheduled_at) < new Date()
+    )
+    .sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime())
+    .slice(0, 5); // Show only last 5 meetings
+
   return (
     <div className="flex-col w-full">
-      <h3 className="text-lg font-semibold text-primary mb-4">Meeting Transcriptions</h3>
+      <h3 className="text-lg font-semibold text-primary mb-4">Meeting Summaries</h3>
       <div className="bg-white p-4 rounded-lg shadow-md max-h-[300px] overflow-y-auto space-y-4">
-        {dummyTranscriptions.map((item, index) => (
-          <div
-            key={index}
-            className="bg-background-light p-4 rounded-md shadow-sm border-l-4 border-secondary"
-          >
-            <p className="text-base font-semibold text-primary">{item.title}</p>
-            <p className="text-sm text-secondary mb-2">{item.time}</p>
-            <p className="text-sm text-gray-800 mb-2">{item.summary}</p>
+        {loading ? (
+          <div className="text-gray-500">Loading meeting summaries...</div>
+        ) : error ? (
+          <div className="text-red-500">Error: {error}</div>
+        ) : completedMeetings.length === 0 ? (
+          <div className="text-gray-500">No meeting summaries available</div>
+        ) : (
+          completedMeetings.map((meeting) => (
+            <div
+              key={meeting.id}
+              className="bg-background-light p-4 rounded-md shadow-sm border-l-4 border-secondary"
+            >
+              <p className="text-base font-semibold text-primary">{meeting.title}</p>
+              <p className="text-sm text-secondary mb-2">
+                {new Date(meeting.scheduled_at).toLocaleDateString()} at{" "}
+                {new Date(meeting.scheduled_at).toLocaleTimeString([], { 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })}
+              </p>
+              <p className="text-sm text-gray-800 mb-2">
+                {meeting.description || "Meeting completed successfully. Transcription and summary will be available here."}
+              </p>
 
-            <div className="text-sm text-gray-700 mb-2">
-              <p className="font-semibold mb-1">Highlights:</p>
-              <ul className="list-disc list-inside space-y-1">
-                {item.highlights.map((point, i) => (
-                  <li key={i}>{point}</li>
-                ))}
-              </ul>
-            </div>
+              <div className="text-sm text-gray-700 mb-2">
+                <p className="font-semibold mb-1">Meeting Details:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Duration: {meeting.duration_minutes} minutes</li>
+                  {meeting.location && <li>Location: {meeting.location}</li>}
+                  <li>Supervisor: {meeting.supervisor.first_name} {meeting.supervisor.last_name}</li>
+                </ul>
+              </div>
 
-            <div className="text-sm text-gray-700">
-              <p className="font-semibold mb-1">Action Points:</p>
-              <ul className="list-disc list-inside space-y-1">
-                {item.actionItems.map((point, i) => (
-                  <li key={i}>{point}</li>
-                ))}
-              </ul>
+              <div className="text-sm text-gray-700">
+                <p className="font-semibold mb-1">Status:</p>
+                <span className={`px-2 py-1 rounded text-xs ${
+                  meeting.status?.toLowerCase() === 'completed' 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-gray-100 text-gray-700'
+                }`}>
+                  {meeting.status || 'Completed'}
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

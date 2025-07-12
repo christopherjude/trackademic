@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8000/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
 
 class ApiClient {
   private msalInstance?: any;
@@ -9,13 +9,23 @@ class ApiClient {
     this.account = account;
   }
 
-  private async getAccessToken(): Promise<string> {
+  private async getAccessToken(): Promise<string | null> {
     try {
-      // For development, return a mock token
-      // In production, you'd use: await this.msalInstance.acquireTokenSilent({...})
-      return "mock-token";
+      if (this.msalInstance && this.account) {
+        const clientId = import.meta.env.VITE_AZURE_CLIENT_ID;
+        const request = {
+          scopes: [`api://${clientId}/access_as_user`],
+          account: this.account,
+        };
+        
+        const response = await this.msalInstance.acquireTokenSilent(request);
+        return response.accessToken;
+      }
+      
+      throw new Error("No MSAL instance or account available");
     } catch (error) {
-      throw new Error("Failed to acquire access token");
+      console.error("Failed to acquire access token:", error);
+      throw new Error("Authentication required");
     }
   }
 
@@ -23,14 +33,14 @@ class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const token = await this.getAccessToken();
     const url = `${API_BASE_URL}${endpoint}`;
+    const token = await this.getAccessToken();
 
     const config: RequestInit = {
       ...options,
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },
     };
@@ -48,6 +58,10 @@ class ApiClient {
   // User endpoints
   async getCurrentUser() {
     return this.request("/users/me");
+  }
+
+  async getStudents() {
+    return this.request("/users/students");
   }
 
   // Meeting endpoints
@@ -80,12 +94,37 @@ class ApiClient {
       body: JSON.stringify(updates),
     });
   }
+
+  // Meeting workflow endpoints
+  async checkIntoMeeting(meetingId: number) {
+    return this.request(`/meetings/${meetingId}/checkin`, {
+      method: "POST",
+    });
+  }
+
+  async confirmMeeting(meetingId: number) {
+    return this.request(`/meetings/${meetingId}/confirm`, {
+      method: "POST",
+    });
+  }
+
+  async endMeeting(meetingId: number) {
+    return this.request(`/meetings/${meetingId}/end`, {
+      method: "POST",
+    });
+  }
+
+  async markMeetingMissed(meetingId: number) {
+    return this.request(`/meetings/${meetingId}/mark-missed`, {
+      method: "POST",
+    });
+  }
 }
 
-// Export a simple API client for now
+// Export a global API client instance
 export const apiClient = new ApiClient();
 
-// For MSAL integration, you can create this hook later
-export function createApiClient() {
-  return new ApiClient();
+// Function to create API client with MSAL integration
+export function createApiClient(msalInstance?: any, account?: any) {
+  return new ApiClient(msalInstance, account);
 }
