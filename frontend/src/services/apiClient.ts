@@ -60,6 +60,10 @@ class ApiClient {
     return this.request("/users/me");
   }
 
+  async getStudents() {
+    return this.request("/users/students");
+  }
+
   // Meeting endpoints
   async getMeetings() {
     return this.request("/meetings");

@@ -42,6 +42,22 @@ def get_current_user_info(
     return current_user
 
 
+@app.get("/api/users/students", response_model=List[schemas.User])
+def get_students(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get list of students (for supervisors to schedule meetings)"""
+    if current_user.role not in [models.UserRole.SUPERVISOR, models.UserRole.DIRECTOR]:
+        raise HTTPException(
+            status_code=403,
+            detail="Only supervisors and directors can view student list"
+        )
+    
+    students = db.query(models.User).filter(models.User.role == models.UserRole.STUDENT).all()
+    return students
+
+
 # Meeting routes
 @app.get("/api/meetings", response_model=List[schemas.Meeting])
 def get_meetings(

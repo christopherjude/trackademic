@@ -4,6 +4,7 @@ import { AccountInfo } from "@azure/msal-browser";
 import { createApiClient } from "../services/apiClient";
 
 interface User {
+  id: number;
   firstName: string;
   lastName: string;
   email: string;
@@ -24,47 +25,71 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [apiClient, setApiClient] = useState<any>(null);
 
   useEffect(() => {
-    if (accounts.length > 0) {
-      const account: AccountInfo = accounts[0];
-      const fullName = account.name || "";
-      const [firstName, ...rest] = fullName.split(" "); 
-      const lastName = rest.join(" ");
-      const email = account.username;
-
-      // Create API client with MSAL integration
-      const client = createApiClient(instance, account);
-      setApiClient(client);
-
-      // Get roles from ID token claims
-      let role: "student" | "supervisor" | "director" = "student"; // default
-      
-      // Check if the account has ID token claims with roles
-      if (account.idTokenClaims && account.idTokenClaims.roles) {
-        const roles = account.idTokenClaims.roles as string[];
+    const fetchUserData = async () => {
+      if (accounts.length > 0) {
+        const account: AccountInfo = accounts[0];
         
-        if (roles.includes("Director")) {
-          role = "director";
-        } else if (roles.includes("Supervisor")) {
-          role = "supervisor";
-        } else if (roles.includes("Student")) {
-          role = "student";
+        // Create API client with MSAL integration
+        const client = createApiClient(instance, account);
+        setApiClient(client);
+
+        try {
+          // Fetch full user data from backend
+          const userData = await client.getCurrentUser() as {
+            id: number;
+            first_name: string;
+            last_name: string;
+            email: string;
+            role: "student" | "supervisor" | "director";
+          };
+          
+          setUser({
+            id: userData.id,
+            firstName: userData.first_name,
+            lastName: userData.last_name,
+            email: userData.email,
+            role: userData.role,
+            avatarUrl: "/avatar.png",
+          });
+        } catch (error) {
+          console.error("Failed to fetch user data:", error);
+          // Fallback to Azure AD token data if API call fails
+          const fullName = account.name || "";
+          const [firstName, ...rest] = fullName.split(" "); 
+          const lastName = rest.join(" ");
+          const email = account.username;
+
+          // Get roles from ID token claims
+          let role: "student" | "supervisor" | "director" = "student"; // default
+          
+          if (account.idTokenClaims && account.idTokenClaims.roles) {
+            const roles = account.idTokenClaims.roles as string[];
+            
+            if (roles.includes("Director")) {
+              role = "director";
+            } else if (roles.includes("Supervisor")) {
+              role = "supervisor";
+            } else if (roles.includes("Student")) {
+              role = "student";
+            }
+          }
+
+          setUser({
+            id: 0, // Fallback ID when backend is unavailable
+            firstName,
+            lastName,
+            email,
+            avatarUrl: "/avatar.png",
+            role,
+          });
         }
+      } else {
+        setUser(null);
+        setApiClient(null);
       }
+    };
 
-      console.log("User roles from token:", account.idTokenClaims?.roles);
-      console.log("Assigned role:", role);
-
-      setUser({
-        firstName,
-        lastName,
-        email,
-        avatarUrl: "/avatar.png",
-        role,
-      });
-    } else {
-      setUser(null);
-      setApiClient(null);
-    }
+    fetchUserData();
   }, [instance, accounts]);
 
   return (

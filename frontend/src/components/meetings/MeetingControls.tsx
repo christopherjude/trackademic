@@ -25,61 +25,76 @@ const MeetingControls = ({ meeting }: MeetingControlsProps) => {
   const isStudent = user?.role === 'student';
   const isSupervisor = user?.role === 'supervisor' || user?.role === 'director';
   
-  // For now, we'll assume the logged-in student is Alice (id=1) and supervisor is Bob (id=2)
-  // In production, you'd get the actual user ID from the backend based on email
-  const currentUserId = user?.email === 'alice@trackademic.uk' ? 1 : 
-                       user?.email === 'bob@trackademic.uk' ? 2 : 
-                       user?.email === 'candice@trackademic.uk' ? 3 : null;
-  
+  // Check if current user is a participant in this meeting
   const isParticipant = 
-    (isStudent && meeting.student_id === currentUserId) ||
-    (isSupervisor && meeting.supervisor_id === currentUserId);
+    (isStudent && meeting.student_id === user?.id) ||
+    (isSupervisor && meeting.supervisor_id === user?.id);
 
-  if (!isParticipant) return null;
+  // Only show controls if user is a participant or director
+  if (!isParticipant && user?.role !== 'director') return null;
 
   return (
     <div className="flex gap-2 mt-2">
-      {/* Student Actions */}
-      {isStudent && meeting.status === 'scheduled' && (
+      {/* Student or Supervisor: Start Meeting */}
+      {(isStudent || isSupervisor) && meeting.status?.toUpperCase() === 'SCHEDULED' && (
         <button
-          onClick={() => handleAction(() => checkIntoMeeting(meeting.id))}
+          onClick={async () => {
+            if (isSupervisor) {
+              setLoading(true);
+              try {
+                await checkIntoMeeting(meeting.id); // set status to student_checked_in
+                await confirmMeeting(meeting.id);  // immediately confirm
+              } catch (error) {
+                console.error('Meeting start failed:', error);
+              } finally {
+                setLoading(false);
+              }
+            } else {
+              handleAction(() => checkIntoMeeting(meeting.id));
+            }
+          }}
+          className="w-full bg-secondary text-background-light py-3 px-6 rounded-lg shadow-lg hover:bg-secondary transition-all font-semibold flex items-center justify-center gap-3"
           disabled={loading}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
         >
-          {loading ? 'Checking In...' : "I'm in the meeting"}
+          {loading ? 'Starting...' : 'Start meeting'}
         </button>
       )}
-
-      {/* Supervisor Actions */}
-      {isSupervisor && meeting.status === 'student_checked_in' && (
+      {/* Supervisor: Confirm Meeting if student has checked in */}
+      {isSupervisor && meeting.status?.toUpperCase() === 'STUDENT_CHECKED_IN' && (
         <button
-          onClick={() => handleAction(() => confirmMeeting(meeting.id))}
+          onClick={async () => {
+            setLoading(true);
+            try {
+              await confirmMeeting(meeting.id);
+            } catch (error) {
+              console.error('Meeting confirm failed:', error);
+            } finally {
+              setLoading(false);
+            }
+          }}
+          className="w-full bg-success text-white py-3 px-6 rounded-lg shadow-lg hover:bg-success transition-all font-semibold flex items-center justify-center gap-3"
           disabled={loading}
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
         >
-          {loading ? 'Confirming...' : 'Confirm Meeting'}
+          {loading ? 'Confirming...' : 'Confirm meeting'}
         </button>
       )}
-
-      {/* End Meeting (Both can do this) */}
-      {meeting.status === 'confirmed' && (
+      {/* End Meeting button for participants when meeting is confirmed */}
+      {(isParticipant || user?.role === 'director') && meeting.status?.toUpperCase() === 'CONFIRMED' && (
         <button
-          onClick={() => handleAction(() => endMeeting(meeting.id))}
+          onClick={async () => {
+            setLoading(true);
+            try {
+              await endMeeting(meeting.id); // This should set end time and status to COMPLETED
+            } catch (error) {
+              console.error('End meeting failed:', error);
+            } finally {
+              setLoading(false);
+            }
+          }}
+          className="w-full bg-error text-white py-3 px-6 rounded-lg shadow-lg hover:bg-error transition-all font-semibold flex items-center justify-center gap-3"
           disabled={loading}
-          className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 disabled:opacity-50"
         >
-          {loading ? 'Ending...' : 'End Meeting'}
-        </button>
-      )}
-
-      {/* Mark as Missed (Supervisor only) */}
-      {isSupervisor && ['scheduled', 'student_checked_in'].includes(meeting.status) && (
-        <button
-          onClick={() => handleAction(() => markMeetingMissed(meeting.id))}
-          disabled={loading}
-          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
-        >
-          {loading ? 'Marking...' : 'Mark as Missed'}
+          {loading ? 'Ending...' : 'End meeting'}
         </button>
       )}
     </div>
