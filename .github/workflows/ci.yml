@@ -52,6 +52,9 @@ jobs:
     if: needs.check-changes.outputs.backend == 'true' || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     name: Backend Build & Deploy
+    permissions:
+      id-token: write
+      contents: read
     env:
       AZURE_WEBAPP_NAME: trackademic-backend-eccabtdbfddwdef5
       AZURE_RESOURCE_GROUP: trackademic-frontend_group
@@ -70,6 +73,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r ${{ env.BACKEND_PATH }}/requirements.txt
 
+      - name: Azure Login using OIDC
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
       - name: Zip backend code
         run: |
           cd ${{ env.BACKEND_PATH }}
@@ -81,5 +91,4 @@ jobs:
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           package: backend.zip
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
           startup-command: 'gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:8000'
