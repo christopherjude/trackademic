@@ -41,3 +41,8 @@ Procfile
 runtime.txt
 startup.py
 startup.txt
+
+# Azure publish profiles (contain sensitive data)
+*.PublishSettings
+*publish-profile*.xml
+new-publish-profile*.xml

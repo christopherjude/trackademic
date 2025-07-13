@@ -53,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Backend Build & Deploy
     env:
-      AZURE_WEBAPP_NAME: trackademic-backend
+      AZURE_WEBAPP_NAME: trackademic-backend-eccabtdbfddwdef5
       AZURE_RESOURCE_GROUP: trackademic-frontend_group
       AZURE_PYTHON_VERSION: '3.10'
       BACKEND_PATH: backend
