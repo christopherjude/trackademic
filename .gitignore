@@ -1,2 +1,43 @@
+# Python
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
 venv/
+env/
+.env
+.env.local
+.env.production
+.env.staging
+
+# Database
+*.db
+*.db.backup
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Deployment
+*.zip
+deploy*/
+.deployment
+
+# Azure/Production specific
+web.config
+Procfile
+runtime.txt
+startup.py
+startup.txt
