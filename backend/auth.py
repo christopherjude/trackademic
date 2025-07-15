@@ -26,6 +26,7 @@ def get_azure_jwks():
 
 JWKS = get_azure_jwks()
 
+
 from jose.utils import base64url_decode
 
 def decode_token(token: str):
