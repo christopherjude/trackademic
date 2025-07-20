@@ -34,7 +34,6 @@ Thumbs.db
 *.zip
 deploy*/
 .deployment
-deploy-*.sh
 
 # Azure/Production specific
 web.config
@@ -47,3 +46,8 @@ startup.txt
 *.PublishSettings
 *publish-profile*.xml
 new-publish-profile*.xml
+
+# Deployment scripts (local use only)
+deploy-*.sh
+deploy-backend.sh
+deploy-frontend.sh

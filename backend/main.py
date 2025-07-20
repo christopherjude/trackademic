@@ -21,7 +21,9 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:5173",
-    ],  # Vite default port
+        "https://trackademic.uk",  # Production frontend
+        "https://www.trackademic.uk",  # www subdomain
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

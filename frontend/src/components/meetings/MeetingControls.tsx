@@ -8,7 +8,7 @@ interface MeetingControlsProps {
 
 const MeetingControls = ({ meeting }: MeetingControlsProps) => {
   const { user } = useAuth();
-  const { checkIntoMeeting, confirmMeeting, endMeeting, markMeetingMissed } = useMeetings();
+  const { checkIntoMeeting, confirmMeeting, endMeeting } = useMeetings();
   const [loading, setLoading] = useState(false);
 
   const handleAction = async (action: () => Promise<any>) => {
