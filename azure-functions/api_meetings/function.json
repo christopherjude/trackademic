@@ -1,12 +1,13 @@
 {
+  "scriptFile": "__init__.py",
   "bindings": [
     {
       "authLevel": "anonymous",
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
-      "methods": ["get"],
-      "route": "debug"
+      "methods": ["get", "post", "options"],
+      "route": "meetings"
     },
     {
       "type": "http",

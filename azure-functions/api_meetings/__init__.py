@@ -1,11 +1,11 @@
 import azure.functions as func
 import json
-import sys
-import os
 import logging
 
-# Add the api directory to path so we can import our modules
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/..')
+# Import our modules
+from auth import decode_token
+from database import get_db, create_tables
+import models
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
@@ -19,23 +19,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
                     'Access-Control-Allow-Credentials': 'true'
                 }
-            )
-
-        # Try to import database modules
-        try:
-            from auth import decode_token
-            from database import get_db, create_tables
-            import models
-        except Exception as import_error:
-            logging.error(f"Import error: {import_error}")
-            return func.HttpResponse(
-                json.dumps({
-                    "error": "Database configuration error",
-                    "details": str(import_error),
-                    "fallback": "Check /api/dbtest for diagnostics"
-                }),
-                status_code=500,
-                headers={'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}
             )
 
         # Initialize database tables
@@ -143,7 +126,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             return func.HttpResponse(
                 json.dumps({"error": "Method not allowed"}),
                 status_code=405,
-                headers={'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}
+                headers={
+                    'Content-Type': 'application/json', 
+                    'Access-Control-Allow-Origin': 'https://trackademic.uk',
+                    'Access-Control-Allow-Credentials': 'true'
+                }
             )
     
     except Exception as e:
@@ -151,9 +138,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse(
             json.dumps({
                 "error": "Internal server error",
-                "details": str(e),
-                "suggestion": "Check /api/dbtest for database diagnostics"
+                "details": str(e)
             }),
             status_code=500,
-            headers={'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}
+            headers={
+                'Content-Type': 'application/json', 
+                'Access-Control-Allow-Origin': 'https://trackademic.uk',
+                'Access-Control-Allow-Credentials': 'true'
+            }
         )

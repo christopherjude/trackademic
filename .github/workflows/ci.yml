@@ -25,7 +25,7 @@ jobs:
       - name: Setup Python for API
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       
       - name: Install API dependencies
         run: |
@@ -43,5 +43,5 @@ jobs:
           app_location: "./frontend"
           api_location: "./frontend/api"
           api_language: "python"
-          api_version: "3.10"
+          api_version: "3.11"
           output_location: "dist"
