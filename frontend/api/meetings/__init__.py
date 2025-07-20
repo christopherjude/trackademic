@@ -14,7 +14,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             return func.HttpResponse(
                 status_code=200,
                 headers={
-                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Origin': 'https://trackademic.uk',
                     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
                     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
                     'Access-Control-Allow-Credentials': 'true'
@@ -50,7 +50,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             return func.HttpResponse(
                 json.dumps({"error": "Missing or invalid authorization header"}),
                 status_code=401,
-                headers={'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}
+                headers={
+                    'Content-Type': 'application/json', 
+                    'Access-Control-Allow-Origin': 'https://trackademic.uk',
+                    'Access-Control-Allow-Credentials': 'true'
+                }
             )
 
         # Extract token and decode
@@ -100,7 +104,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 status_code=200,
                 headers={
                     'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
+                    'Access-Control-Allow-Origin': 'https://trackademic.uk',
+                    'Access-Control-Allow-Credentials': 'true'
                 }
             )
 
@@ -129,7 +134,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 status_code=201,
                 headers={
                     'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
+                    'Access-Control-Allow-Origin': 'https://trackademic.uk',
+                    'Access-Control-Allow-Credentials': 'true'
                 }
             )
         
