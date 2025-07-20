@@ -5,8 +5,8 @@
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
-      "methods": ["get", "post", "options"],
-      "route": "dbtest"
+      "methods": ["get"],
+      "route": "debug"
     },
     {
       "type": "http",
@@ -15,4 +15,3 @@
     }
   ]
 }
-
