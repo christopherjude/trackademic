@@ -1,44 +1,30 @@
-name: CI/CD (Frontend & Backend)
+name: CI/CD Frontend with API
 
 on:
   push:
     branches:
       - main
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/ci.yml'
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
       - main
 
 jobs:
-  check-changes:
-    runs-on: ubuntu-latest
-    outputs:
-      frontend: ${{ steps.changes.outputs.frontend }}
-      backend: ${{ steps.changes.outputs.backend }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v2
-        id: changes
-        with:
-          filters: |
-            frontend:
-              - 'frontend/**'
-            backend:
-              - 'backend/**'
-
   frontend:
-    needs: check-changes
-    if: needs.check-changes.outputs.frontend == 'true' || github.event_name == 'pull_request'
+    if: github.event_name == 'push' && (contains(github.event.head_commit.modified, 'frontend/') || contains(github.event.head_commit.added, 'frontend/')) || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    name: Frontend Build & Deploy
+    name: Frontend Build & Deploy with API
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
         with:
           submodules: true
           lfs: false
       
       - name: Setup Python for API
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       
@@ -60,61 +46,3 @@ jobs:
           api_language: "python"
           api_version: "3.10"
           output_location: "dist"
-
-  # backend:
-  #   needs: check-changes
-  #   if: needs.check-changes.outputs.backend == 'true' || github.event_name == 'pull_request'
-  #   runs-on: ubuntu-latest
-  #   name: Backend Build & Deploy (DISABLED - Using Static Web Apps API)
-  #   permissions:
-  #     id-token: write
-  #     contents: read
-  #   env:
-  #     AZURE_WEBAPP_NAME: trackademic-backend
-  #     AZURE_RESOURCE_GROUP: trackademic-frontend_group
-  #     AZURE_PYTHON_VERSION: '3.10'
-  #     BACKEND_PATH: backend
-  #   steps:
-  #     - uses: actions/checkout@v4
-
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v5
-  #       with:
-  #         python-version: ${{ env.AZURE_PYTHON_VERSION }}
-  #         cache: 'pip'
-
-  #     - name: Install dependencies
-  #       run: |
-  #         python -m pip install --upgrade pip
-  #         pip install -r ${{ env.BACKEND_PATH }}/requirements.txt
-
-  #     - name: Run basic validation
-  #       run: |
-  #         cd ${{ env.BACKEND_PATH }}
-  #         python -c "import main; print('✅ Main module imports successfully')"
-
-  #     - name: Azure Login using OIDC
-  #       uses: azure/login@v1
-  #       with:
-  #         client-id: ${{ secrets.AZURE_CLIENT_ID }}
-  #         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-  #         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-  #     - name: Zip backend code
-  #       run: |
-  #         cd ${{ env.BACKEND_PATH }}
-  #         # Exclude unnecessary files from deployment
-  #         zip -r ../backend.zip . -x "*.pyc" "*__pycache__*" "*.db" "venv/*" ".env*"
-  #         cd ..
-
-  #     - name: Deploy to Azure Web App
-  #       uses: azure/webapps-deploy@v3
-  #       with:
-  #         app-name: ${{ env.AZURE_WEBAPP_NAME }}
-  #         package: backend.zip
-  #         startup-command: 'gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:8000'
-
-  #     - name: Verify deployment
-  #       run: |
-  #         echo "✅ Backend deployment completed successfully"
-  #         echo "🔗 Backend URL: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
