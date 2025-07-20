@@ -14,7 +14,6 @@ on:
 
 jobs:
   frontend:
-    if: github.event_name == 'push' && (contains(github.event.head_commit.modified, 'frontend/') || contains(github.event.head_commit.added, 'frontend/')) || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     name: Frontend Build & Deploy with API
     steps:
