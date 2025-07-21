@@ -25,6 +25,13 @@ const MeetingInProgressCard = () => {
 
   // Check if current user can end the meeting (must be the supervisor of this meeting)
   const canEndMeeting = meeting && user && meeting.supervisor_id === user.id;
+  
+  // Check if user can see this meeting
+  const canViewMeeting = meeting && user && (
+    user.role === 'director' || 
+    meeting.student_id === user.id || 
+    meeting.supervisor_id === user.id
+  );
 
   useEffect(() => {
     if (!meeting?.actual_start_time) return;
@@ -58,7 +65,7 @@ const MeetingInProgressCard = () => {
     return () => clearTimeout(saveTimeout);
   }, [summary, lastSavedSummary, meeting, updateMeetingSummary]);
 
-  if (!meeting) return null;
+  if (!meeting || !canViewMeeting) return null;
 
   const handleEndMeeting = async () => {
     setEnding(true);

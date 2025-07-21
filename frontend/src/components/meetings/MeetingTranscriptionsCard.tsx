@@ -1,13 +1,27 @@
 import { useMeetings } from "../../hooks/useMeetings";
+import { useAuth } from "../../context/AuthContext";
 
 const MeetingTranscriptionsCard = () => {
+  const { user } = useAuth();
   const { meetings, loading, error } = useMeetings();
 
-  // Filter for completed meetings only
+  // Filter for completed meetings only, and by user access
   const completedMeetings = meetings
-    .filter(meeting => 
-      meeting.status?.toUpperCase() === 'COMPLETED'
-    )
+    .filter(meeting => {
+      // First filter by completion status
+      if (meeting.status?.toUpperCase() !== 'COMPLETED') {
+        return false;
+      }
+      
+      // Then filter by user access
+      const isDirector = user?.role === 'director';
+      const isUserMeeting = 
+        meeting.student_id === user?.id || 
+        meeting.supervisor_id === user?.id;
+      
+      // Directors see all meetings, others only see their own
+      return isDirector || isUserMeeting;
+    })
     .sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime())
     .slice(0, 5); // Show only last 5 completed meetings
 

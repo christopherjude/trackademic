@@ -1,12 +1,25 @@
 import { useMeetings } from "../../hooks/useMeetings";
+import { useAuth } from "../../context/AuthContext";
 import MeetingControls from "./MeetingControls";
 
 const UpcomingMeetingCard = () => {
-  const { meetings, loading, error, startMeeting } = useMeetings();
+  const { user } = useAuth();
+  const { meetings, loading, error } = useMeetings();
 
   // Filter for upcoming meetings and meetings ready to start
   const currentTime = new Date();
   const relevantMeetings = meetings.filter(meeting => {
+    // First filter by user access
+    const isDirector = user?.role === 'director';
+    const isUserMeeting = 
+      meeting.student_id === user?.id || 
+      meeting.supervisor_id === user?.id;
+    
+    // Directors see all meetings, others only see their own
+    if (!isDirector && !isUserMeeting) {
+      return false;
+    }
+
     const meetingTime = new Date(meeting.scheduled_at);
     const meetingEndTime = new Date(meetingTime.getTime() + (meeting.duration_minutes * 60 * 1000));
     const status = (meeting.status || '').toLowerCase(); // Use lowercase for comparison

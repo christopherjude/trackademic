@@ -3,11 +3,9 @@ import MeetingHistoryCard from "./MeetingHistoryCard";
 import MeetingTranscriptionsCard from "./MeetingTranscriptionsCard";
 import MeetingInProgressCard from "./MeetingInProgressCard";
 import ScheduleMeetingButton from "./ScheduleMeetingButton";
-import { useAuth } from "../../context/AuthContext";
 import { useMeetings } from "../../hooks/useMeetings";
 
 const MeetingsOverview = () => {
-  const { user } = useAuth();
   const { getInProgressMeeting } = useMeetings();
   const inProgress = getInProgressMeeting();
 

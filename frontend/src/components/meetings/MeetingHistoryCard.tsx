@@ -1,4 +1,5 @@
 import { useMeetings } from "../../hooks/useMeetings";
+import { useAuth } from "../../context/AuthContext";
 
 const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
@@ -20,9 +21,21 @@ const getStatusColor = (status: string) => {
 };
 
 const MeetingHistoryCard = () => {
+  const { user } = useAuth();
   const { fetchMeetingHistory, loading, error } = useMeetings();
 
-  const pastMeetings = fetchMeetingHistory();
+  const allPastMeetings = fetchMeetingHistory();
+  
+  // Filter meetings based on user role
+  const pastMeetings = allPastMeetings.filter(meeting => {
+    const isDirector = user?.role === 'director';
+    const isUserMeeting = 
+      meeting.student_id === user?.id || 
+      meeting.supervisor_id === user?.id;
+    
+    // Directors see all meetings, others only see their own
+    return isDirector || isUserMeeting;
+  });
 
   // Helper function to determine display status
   const getDisplayStatus = (meeting: any) => {
