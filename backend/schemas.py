@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional, List
-from models import UserRole, MilestoneStatus, MeetingStatus
+from models import UserRole, MeetingStatus
 
 # User schemas
 class UserBase(BaseModel):
@@ -11,15 +11,25 @@ class UserBase(BaseModel):
     role: UserRole
 
 class UserCreate(UserBase):
-    azure_oid: str
+    password: str
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
 
 class User(UserBase):
     id: int
-    azure_oid: str
     created_at: datetime
     
     class Config:
         from_attributes = True
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    user_id: Optional[int] = None
 
 # Meeting schemas
 class MeetingBase(BaseModel):
@@ -61,28 +71,3 @@ class MeetingConfirm(BaseModel):
 class MeetingEnd(BaseModel):
     """Schema for ending a meeting"""
     pass
-
-# Milestone schemas
-class MilestoneBase(BaseModel):
-    title: str
-    description: Optional[str] = None
-    due_date: datetime
-
-class MilestoneCreate(MilestoneBase):
-    user_id: int
-
-class MilestoneUpdate(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    due_date: Optional[datetime] = None
-    status: Optional[MilestoneStatus] = None
-
-class Milestone(MilestoneBase):
-    id: int
-    status: MilestoneStatus
-    user_id: int
-    created_at: datetime
-    completed_at: Optional[datetime] = None
-    
-    class Config:
-        from_attributes = True
