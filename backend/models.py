@@ -18,6 +18,7 @@ class MeetingStatus(enum.Enum):
     MISSED = "missed"
     CANCELLED = "cancelled"
     SCHEDULED = "scheduled"
+    IN_PROGRESS = "in_progress"
 
 class User(Base):
     __tablename__ = "users"
@@ -47,6 +48,14 @@ class Meeting(Base):
     student_id = Column(Integer, ForeignKey("users.id"))
     supervisor_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Meeting tracking fields
+    actual_start_time = Column(DateTime)
+    actual_end_time = Column(DateTime)
+    actual_duration_minutes = Column(Integer)
+    
+    # Meeting summary fields
+    meeting_summary = Column(Text)  # Combined summary from both participants
     
     # Relationships
     student = relationship("User", foreign_keys=[student_id], back_populates="meetings_as_student")

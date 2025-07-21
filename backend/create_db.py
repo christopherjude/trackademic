@@ -1,124 +1,127 @@
 #!/usr/bin/env python3
 """
-Script to create and populate the database with sample data
+Database creation script for Trackademic localhost version
+Creates SQLite database with sample data for testing
 """
-from sqlalchemy.orm import Session
-from database import engine, get_db
-from models import Base, User, Meeting, UserRole, MeetingStatus
-from datetime import datetime
 
-# Create all tables
-Base.metadata.create_all(bind=engine)
+import sqlite3
+from datetime import datetime, timedelta
+import os
 
-# Create a database session
-db = Session(bind=engine)
+# Database file path
+DB_PATH = "trackademic.db"
 
-try:
-    # Clear existing data
-    db.query(Meeting).delete()
-    db.query(User).delete()
+def create_database():
+    """Create the database and all tables"""
     
-    # Create users with real Azure AD Object IDs
-    alice = User(
-        azure_oid="40d163bd-3b0e-4212-b603-14740eadd08b",
-        email="alice@trackademic.uk",
-        first_name="Alice",
-        last_name="Studyalot",
-        role=UserRole.STUDENT
-    )
+    # Remove existing database if it exists
+    if os.path.exists(DB_PATH):
+        os.remove(DB_PATH)
+        print(f"Removed existing database: {DB_PATH}")
     
-    bob = User(
-        azure_oid="24b769ca-f058-4c5d-b0a3-87788283fd5d",
-        email="bob@trackademic.uk",
-        first_name="Bob",
-        last_name="Teachalot",
-        role=UserRole.SUPERVISOR
-    )
+    # Create new database connection
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
     
-    candice = User(
-        azure_oid="629a0e01-39b7-483e-afa5-f8aa354cd285",
-        email="candice@trackademic.uk", 
-        first_name="Candice",
-        last_name="Adminalot",
-        role=UserRole.DIRECTOR
-    )
-    
-    db.add_all([alice, bob, candice])
-    db.commit()
-    
-    # Create meetings between Alice and Bob
-    meetings = [
-        Meeting(
-            title="Project Kickoff Meeting",
-            description="Initial project discussion",
-            scheduled_at=datetime(2025, 6, 15, 11, 0),
-            duration_minutes=60,
-            status=MeetingStatus.COMPLETED,
-            student_id=alice.id,
-            supervisor_id=bob.id,
-            actual_start_time=datetime(2025, 6, 15, 11, 5),
-            actual_end_time=datetime(2025, 6, 15, 12, 10),
-            actual_duration_minutes=65
-        ),
-        Meeting(
-            title="Literature Review Discussion", 
-            description="Discuss progress on literature review",
-            scheduled_at=datetime(2025, 6, 28, 15, 30),
-            duration_minutes=45,
-            status=MeetingStatus.COMPLETED,
-            student_id=alice.id,
-            supervisor_id=bob.id,
-            actual_start_time=datetime(2025, 6, 28, 15, 32),
-            actual_end_time=datetime(2025, 6, 28, 16, 15),
-            actual_duration_minutes=43
-        ),
-        Meeting(
-            title="Mid-Progress Review",
-            description="Review progress halfway through the project",
-            scheduled_at=datetime(2025, 7, 5, 14, 0),
-            duration_minutes=60,
-            status=MeetingStatus.SCHEDULED,
-            student_id=alice.id,
-            supervisor_id=bob.id
-        ),
-        Meeting(
-            title="Weekly Check-in",
-            description="Regular weekly progress check",
-            scheduled_at=datetime(2025, 7, 8, 14, 0),
-            duration_minutes=30,
-            status=MeetingStatus.SCHEDULED,
-            student_id=alice.id,
-            supervisor_id=bob.id
-        ),
-        Meeting(
-            title="Methodology Review",
-            description="Review research methodology",
-            scheduled_at=datetime(2025, 7, 12, 10, 0),
-            duration_minutes=60,
-            status=MeetingStatus.SCHEDULED,
-            student_id=alice.id,
-            supervisor_id=bob.id
-        ),
-        Meeting(
-            title="Thesis Draft Review",
-            description="Review first draft of thesis",
-            scheduled_at=datetime(2025, 7, 19, 15, 0),
-            duration_minutes=90,
-            status=MeetingStatus.SCHEDULED,
-            student_id=alice.id,
-            supervisor_id=bob.id
+    # Create users table
+    cursor.execute('''
+        CREATE TABLE users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            first_name TEXT NOT NULL,
+            last_name TEXT NOT NULL,
+            role TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
+    ''')
+    
+    # Create meetings table
+    cursor.execute('''
+        CREATE TABLE meetings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            description TEXT,
+            scheduled_at TIMESTAMP NOT NULL,
+            duration_minutes INTEGER DEFAULT 60,
+            location TEXT,
+            status TEXT DEFAULT 'PENDING',
+            student_id INTEGER NOT NULL,
+            supervisor_id INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            actual_start_time TIMESTAMP,
+            actual_end_time TIMESTAMP,
+            actual_duration_minutes INTEGER,
+            meeting_summary TEXT,
+            FOREIGN KEY (student_id) REFERENCES users(id),
+            FOREIGN KEY (supervisor_id) REFERENCES users(id)
+        )
+    ''')
+    
+    print("Created tables: users, meetings")
+    
+    # Insert sample users
+    sample_users = [
+        ("student@test.com", "password123", "John", "Doe", "STUDENT"),
+        ("supervisor@test.com", "password123", "Dr. Jane", "Smith", "SUPERVISOR"),
+        ("director@test.com", "password123", "Prof. Bob", "Wilson", "DIRECTOR"),
     ]
     
-    db.add_all(meetings)
-    db.commit()
+    cursor.executemany('''
+        INSERT INTO users (email, password, first_name, last_name, role)
+        VALUES (?, ?, ?, ?, ?)
+    ''', sample_users)
     
-    print("Database created and populated successfully!")
-    print(f"Created {len([alice, bob, candice])} users")
-    print(f"Created {len(meetings)} meetings")
+    print(f"Inserted {len(sample_users)} sample users")
     
-except Exception as e:
-    print(f"Error: {e}")
-    db.rollback()
-finally:
-    db.close()
+    # No sample meetings - start with empty meetings table
+    print("No sample meetings inserted - starting with empty meetings table")
+    
+    # Commit changes and close connection
+    conn.commit()
+    conn.close()
+    
+    print(f"Database created successfully: {DB_PATH}")
+
+def print_database_info():
+    """Print information about the created database"""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    
+    # Print users
+    print("\n=== USERS ===")
+    cursor.execute("SELECT id, email, first_name, last_name, role FROM users")
+    users = cursor.fetchall()
+    for user in users:
+        print(f"ID: {user[0]}, Email: {user[1]}, Name: {user[2]} {user[3]}, Role: {user[4]}")
+    
+    # Print meetings
+    print("\n=== MEETINGS ===")
+    cursor.execute("""
+        SELECT m.id, m.title, m.scheduled_at, m.status, m.duration_minutes,
+               u1.first_name || ' ' || u1.last_name as student_name,
+               u2.first_name || ' ' || u2.last_name as supervisor_name
+        FROM meetings m
+        JOIN users u1 ON m.student_id = u1.id
+        JOIN users u2 ON m.supervisor_id = u2.id
+        ORDER BY m.scheduled_at
+    """)
+    meetings = cursor.fetchall()
+    if meetings:
+        for meeting in meetings:
+            print(f"ID: {meeting[0]}, Title: {meeting[1]}, Scheduled: {meeting[2]}, Status: {meeting[3]}")
+            print(f"    Duration: {meeting[4]}min, Student: {meeting[5]}, Supervisor: {meeting[6]}")
+    else:
+        print("No meetings found")
+    
+    conn.close()
+
+if __name__ == "__main__":
+    print("Creating Trackademic database...")
+    create_database()
+    print_database_info()
+    print("\nDatabase setup complete!")
+    print("\nLogin credentials for testing:")
+    print("Student: student@test.com / password123")
+    print("Supervisor: supervisor@test.com / password123")
+    print("Director: director@test.com / password123")

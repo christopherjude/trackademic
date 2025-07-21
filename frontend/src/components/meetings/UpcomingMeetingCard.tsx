@@ -2,7 +2,7 @@ import { useMeetings } from "../../hooks/useMeetings";
 import MeetingControls from "./MeetingControls";
 
 const UpcomingMeetingCard = () => {
-  const { meetings, loading, error } = useMeetings();
+  const { meetings, loading, error, startMeeting } = useMeetings();
 
   // Filter for upcoming meetings and meetings ready to start
   const currentTime = new Date();

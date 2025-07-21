@@ -142,6 +142,24 @@ def create_meeting(
 
 
 # Meeting workflow endpoints
+@app.post("/api/meetings/{meeting_id}/start", response_model=schemas.Meeting)
+def start_meeting(
+    meeting_id: int,
+    db: Session = Depends(get_db)
+):
+    """Start a meeting - sets status to IN_PROGRESS"""
+    meeting = db.query(models.Meeting).filter(models.Meeting.id == meeting_id).first()
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+
+    # Update meeting status and record actual start time
+    meeting.status = models.MeetingStatus.IN_PROGRESS
+    meeting.actual_start_time = datetime.now()
+    db.commit()
+    db.refresh(meeting)
+    return meeting
+
+
 @app.post("/api/meetings/{meeting_id}/checkin", response_model=schemas.Meeting)
 def student_checkin_meeting(
     meeting_id: int,
@@ -177,23 +195,49 @@ def supervisor_confirm_meeting(
     return meeting
 
 
+@app.post("/api/meetings/{meeting_id}/update-summary", response_model=schemas.Meeting)
+def update_meeting_summary(
+    meeting_id: int,
+    summary_data: schemas.MeetingUpdateSummary,
+    db: Session = Depends(get_db)
+):
+    """Update meeting summary during the meeting"""
+    meeting = db.query(models.Meeting).filter(models.Meeting.id == meeting_id).first()
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+
+    if meeting.status != models.MeetingStatus.IN_PROGRESS:
+        raise HTTPException(status_code=400, detail="Meeting must be in progress to update summary")
+
+    # Update meeting summary
+    meeting.meeting_summary = summary_data.meeting_summary
+    db.commit()
+    db.refresh(meeting)
+    return meeting
+
+
 @app.post("/api/meetings/{meeting_id}/end", response_model=schemas.Meeting)
 def end_meeting(
     meeting_id: int,
+    end_data: schemas.MeetingEnd,
     db: Session = Depends(get_db)
 ):
-    """End a meeting and calculate actual duration - simplified for localhost"""
+    """End a meeting and calculate actual duration"""
     meeting = db.query(models.Meeting).filter(models.Meeting.id == meeting_id).first()
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
 
     # Calculate actual duration
-    end_time = datetime.utcnow()
+    end_time = datetime.now()
     if meeting.actual_start_time:
         duration = end_time - meeting.actual_start_time
         actual_duration_minutes = int(duration.total_seconds() / 60)
     else:
         actual_duration_minutes = 0
+
+    # Update meeting with final summary if provided
+    if end_data.meeting_summary:
+        meeting.meeting_summary = end_data.meeting_summary
 
     # Update meeting
     meeting.status = models.MeetingStatus.COMPLETED

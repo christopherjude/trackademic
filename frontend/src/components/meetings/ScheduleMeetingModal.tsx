@@ -63,12 +63,21 @@ const ScheduleMeetingModal = ({ isOpen, onClose, selectedStudentId }: ScheduleMe
         throw new Error('Please select a student');
       }
       
-      await createMeeting({
+      console.log('Creating meeting with data:', {
+        ...formData,
+        student_id: parseInt(formData.student_id.toString()),
+        supervisor_id: user.id,
+        scheduled_at: formData.scheduled_at,
+      });
+      
+      const newMeeting = await createMeeting({
         ...formData,
         student_id: parseInt(formData.student_id.toString()),
         supervisor_id: user.id,
         scheduled_at: formData.scheduled_at, // Keep it simple - no timezone conversion
       });
+      
+      console.log('Meeting created successfully:', newMeeting);
       
       onClose();
       setFormData({
@@ -81,13 +90,15 @@ const ScheduleMeetingModal = ({ isOpen, onClose, selectedStudentId }: ScheduleMe
       });
     } catch (error) {
       console.error('Failed to schedule meeting:', error);
+      // You might want to show an error message to the user here
+      alert(`Failed to schedule meeting: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center z-50">
       <div className="bg-background-light rounded-lg shadow-xl p-8 w-full max-w-md mx-4">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-primary">Schedule New Meeting</h2>
@@ -134,26 +145,17 @@ const ScheduleMeetingModal = ({ isOpen, onClose, selectedStudentId }: ScheduleMe
 
           <div>
             <label className="block text-sm font-medium text-primary mb-2">Date & Time</label>
-            <div className="relative">
-              <input
-                type="datetime-local"
-                required
-                value={formData.scheduled_at}
-                onChange={(e) => setFormData({ ...formData, scheduled_at: e.target.value })}
-                className="w-full px-4 py-3 text-primary bg-white border border-neutral-light rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                style={{
-                  colorScheme: 'light',
-                  WebkitAppearance: 'none',
-                  MozAppearance: 'textfield'
-                }}
-                min={new Date().toISOString().slice(0, 16)}
-              />
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-            </div>
+            <input
+              type="datetime-local"
+              required
+              value={formData.scheduled_at}
+              onChange={(e) => setFormData({ ...formData, scheduled_at: e.target.value })}
+              className="w-full px-4 py-3 text-primary bg-white border border-neutral-light rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+              style={{
+                colorScheme: 'light'
+              }}
+              min={new Date().toISOString().slice(0, 16)}
+            />
           </div>
 
           <div>

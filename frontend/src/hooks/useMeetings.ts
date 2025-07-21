@@ -13,6 +13,7 @@ export interface Meeting {
   actual_start_time?: string;
   actual_end_time?: string;
   actual_duration_minutes?: number;
+  meeting_summary?: string;
   student_id: number;
   supervisor_id: number;
   created_at: string;
@@ -55,13 +56,37 @@ export function useMeetings() {
     }
   };
 
-  const createMeeting = async (meeting: Omit<Meeting, "id" | "created_at" | "student" | "supervisor">) => {
+  const createMeeting = async (meeting: Omit<Meeting, "id" | "created_at" | "student" | "supervisor" | "meeting_summary">) => {
     try {
       const newMeeting = await apiClient.createMeeting(meeting) as Meeting;
-      setMeetings((prev: Meeting[]) => [...prev, newMeeting]);
+      // Refetch all meetings to ensure we have the latest state with populated relationships
+      await fetchMeetings();
       return newMeeting;
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : "Failed to create meeting");
+    }
+  };
+
+  const startMeeting = async (meetingId: number) => {
+    try {
+      const updatedMeeting = await apiClient.startMeeting(meetingId) as Meeting;
+      // Refetch all meetings to ensure we have the latest state
+      await fetchMeetings();
+      return updatedMeeting;
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : "Failed to start meeting");
+    }
+  };
+
+  const updateMeetingSummary = async (meetingId: number, summary: string) => {
+    try {
+      const updatedMeeting = await apiClient.updateMeetingSummary(meetingId, summary) as Meeting;
+      setMeetings((prev: Meeting[]) => 
+        prev.map(meeting => meeting.id === meetingId ? updatedMeeting : meeting)
+      );
+      return updatedMeeting;
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : "Failed to update meeting summary");
     }
   };
 
@@ -89,12 +114,11 @@ export function useMeetings() {
     }
   };
 
-  const endMeeting = async (meetingId: number) => {
+  const endMeeting = async (meetingId: number, summary?: string) => {
     try {
-      const updatedMeeting = await apiClient.endMeeting(meetingId) as Meeting;
-      setMeetings((prev: Meeting[]) => 
-        prev.map(meeting => meeting.id === meetingId ? updatedMeeting : meeting)
-      );
+      const updatedMeeting = await apiClient.endMeeting(meetingId, summary) as Meeting;
+      // Refetch all meetings to ensure we have the latest state
+      await fetchMeetings();
       return updatedMeeting;
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : "Failed to end meeting");
@@ -151,6 +175,8 @@ export function useMeetings() {
     error,
     refetch: fetchMeetings,
     createMeeting,
+    startMeeting,
+    updateMeetingSummary,
     checkIntoMeeting,
     confirmMeeting,
     endMeeting,

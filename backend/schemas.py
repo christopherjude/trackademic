@@ -53,6 +53,7 @@ class Meeting(MeetingBase):
     actual_start_time: Optional[datetime] = None
     actual_end_time: Optional[datetime] = None
     actual_duration_minutes: Optional[int] = None
+    meeting_summary: Optional[str] = None
     created_at: datetime
     student: User
     supervisor: User
@@ -70,4 +71,8 @@ class MeetingConfirm(BaseModel):
 
 class MeetingEnd(BaseModel):
     """Schema for ending a meeting"""
-    pass
+    meeting_summary: Optional[str] = None
+
+class MeetingUpdateSummary(BaseModel):
+    """Schema for updating meeting summary during the meeting"""
+    meeting_summary: str

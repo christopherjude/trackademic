@@ -70,6 +70,19 @@ class ApiClient {
   }
 
   // Meeting workflow endpoints
+  async startMeeting(meetingId: number) {
+    return this.request(`/meetings/${meetingId}/start`, {
+      method: 'POST',
+    });
+  }
+
+  async updateMeetingSummary(meetingId: number, meetingSummary: string) {
+    return this.request(`/meetings/${meetingId}/update-summary`, {
+      method: 'POST',
+      body: JSON.stringify({ meeting_summary: meetingSummary }),
+    });
+  }
+
   async checkIntoMeeting(meetingId: number) {
     return this.request(`/meetings/${meetingId}/checkin`, {
       method: 'POST',
@@ -82,9 +95,10 @@ class ApiClient {
     });
   }
 
-  async endMeeting(meetingId: number) {
+  async endMeeting(meetingId: number, meetingSummary?: string) {
     return this.request(`/meetings/${meetingId}/end`, {
       method: 'POST',
+      body: JSON.stringify({ meeting_summary: meetingSummary }),
     });
   }
 

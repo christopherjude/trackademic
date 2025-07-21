@@ -8,7 +8,7 @@ interface MeetingControlsProps {
 
 const MeetingControls = ({ meeting }: MeetingControlsProps) => {
   const { user } = useAuth();
-  const { checkIntoMeeting, confirmMeeting, endMeeting } = useMeetings();
+  const { startMeeting } = useMeetings();
   const [loading, setLoading] = useState(false);
 
   const handleAction = async (action: () => Promise<any>) => {
@@ -30,71 +30,21 @@ const MeetingControls = ({ meeting }: MeetingControlsProps) => {
     (isStudent && meeting.student_id === user?.id) ||
     (isSupervisor && meeting.supervisor_id === user?.id);
 
-  // Only show controls if user is a participant or director
-  if (!isParticipant && user?.role !== 'director') return null;
+  // Only show controls if user is a participant
+  if (!isParticipant) return null;
 
   return (
     <div className="flex gap-2 mt-2">
-      {/* Student or Supervisor: Start Meeting */}
-      {(isStudent || isSupervisor) && meeting.status?.toUpperCase() === 'SCHEDULED' && (
+      {/* Start Meeting button - available when meeting is ready to start */}
+      {(isStudent || isSupervisor) && 
+       (['SCHEDULED', 'PENDING'].includes(meeting.status?.toUpperCase() || '')) && 
+       new Date(meeting.scheduled_at) <= new Date() && (
         <button
-          onClick={async () => {
-            if (isSupervisor) {
-              setLoading(true);
-              try {
-                await checkIntoMeeting(meeting.id); // set status to student_checked_in
-                await confirmMeeting(meeting.id);  // immediately confirm
-              } catch (error) {
-                console.error('Meeting start failed:', error);
-              } finally {
-                setLoading(false);
-              }
-            } else {
-              handleAction(() => checkIntoMeeting(meeting.id));
-            }
-          }}
+          onClick={() => handleAction(() => startMeeting(meeting.id))}
           className="w-full bg-secondary text-background-light py-3 px-6 rounded-lg shadow-lg hover:bg-secondary transition-all font-semibold flex items-center justify-center gap-3"
           disabled={loading}
         >
-          {loading ? 'Starting...' : 'Start meeting'}
-        </button>
-      )}
-      {/* Supervisor: Confirm Meeting if student has checked in */}
-      {isSupervisor && meeting.status?.toUpperCase() === 'STUDENT_CHECKED_IN' && (
-        <button
-          onClick={async () => {
-            setLoading(true);
-            try {
-              await confirmMeeting(meeting.id);
-            } catch (error) {
-              console.error('Meeting confirm failed:', error);
-            } finally {
-              setLoading(false);
-            }
-          }}
-          className="w-full bg-success text-white py-3 px-6 rounded-lg shadow-lg hover:bg-success transition-all font-semibold flex items-center justify-center gap-3"
-          disabled={loading}
-        >
-          {loading ? 'Confirming...' : 'Confirm meeting'}
-        </button>
-      )}
-      {/* End Meeting button for participants when meeting is confirmed */}
-      {(isParticipant || user?.role === 'director') && meeting.status?.toUpperCase() === 'CONFIRMED' && (
-        <button
-          onClick={async () => {
-            setLoading(true);
-            try {
-              await endMeeting(meeting.id); // This should set end time and status to COMPLETED
-            } catch (error) {
-              console.error('End meeting failed:', error);
-            } finally {
-              setLoading(false);
-            }
-          }}
-          className="w-full bg-error text-white py-3 px-6 rounded-lg shadow-lg hover:bg-error transition-all font-semibold flex items-center justify-center gap-3"
-          disabled={loading}
-        >
-          {loading ? 'Ending...' : 'End meeting'}
+          {loading ? 'Starting...' : 'Start Meeting'}
         </button>
       )}
     </div>

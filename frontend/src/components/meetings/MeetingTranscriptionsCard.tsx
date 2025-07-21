@@ -35,16 +35,22 @@ const MeetingTranscriptionsCard = () => {
                   minute: '2-digit' 
                 })}
               </p>
-              <p className="text-sm text-gray-800 mb-2">
-                {meeting.description || "Meeting completed successfully. Transcription and summary will be available here."}
+              <p className="text-sm text-gray-800 mb-3">
+                {meeting.meeting_summary || "No meeting summary available."}
               </p>
 
               <div className="text-sm text-gray-700 mb-2">
                 <p className="font-semibold mb-1">Meeting Details:</p>
                 <ul className="list-disc list-inside space-y-1">
-                  <li>Duration: {meeting.duration_minutes} minutes</li>
+                  <li>
+                    Duration: {meeting.actual_duration_minutes || meeting.duration_minutes} minutes
+                    {meeting.actual_duration_minutes && meeting.actual_duration_minutes !== meeting.duration_minutes && (
+                      <span className="text-gray-500"> (planned: {meeting.duration_minutes})</span>
+                    )}
+                  </li>
                   {meeting.location && <li>Location: {meeting.location}</li>}
                   <li>Supervisor: {meeting.supervisor.first_name} {meeting.supervisor.last_name}</li>
+                  <li>Student: {meeting.student.first_name} {meeting.student.last_name}</li>
                 </ul>
               </div>
 
