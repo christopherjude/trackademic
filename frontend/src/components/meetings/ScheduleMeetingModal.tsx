@@ -31,7 +31,6 @@ const ScheduleMeetingModal = ({ isOpen, onClose, selectedStudentId }: ScheduleMe
     student_id: selectedStudentId || "",
   });
 
-  // Fetch students when modal opens
   useEffect(() => {
     const fetchStudents = async () => {
       if (isOpen) {
@@ -74,7 +73,7 @@ const ScheduleMeetingModal = ({ isOpen, onClose, selectedStudentId }: ScheduleMe
         ...formData,
         student_id: parseInt(formData.student_id.toString()),
         supervisor_id: user.id,
-        scheduled_at: formData.scheduled_at, // Keep it simple - no timezone conversion
+        scheduled_at: formData.scheduled_at,
       });
       
       console.log('Meeting created successfully:', newMeeting);
@@ -90,7 +89,6 @@ const ScheduleMeetingModal = ({ isOpen, onClose, selectedStudentId }: ScheduleMe
       });
     } catch (error) {
       console.error('Failed to schedule meeting:', error);
-      // You might want to show an error message to the user here
       alert(`Failed to schedule meeting: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };

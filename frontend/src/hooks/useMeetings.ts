@@ -59,7 +59,6 @@ export function useMeetings() {
   const createMeeting = async (meeting: Omit<Meeting, "id" | "created_at" | "student" | "supervisor" | "meeting_summary">) => {
     try {
       const newMeeting = await apiClient.createMeeting(meeting) as Meeting;
-      // Refetch all meetings to ensure we have the latest state with populated relationships
       await fetchMeetings();
       return newMeeting;
     } catch (err) {
@@ -70,7 +69,6 @@ export function useMeetings() {
   const startMeeting = async (meetingId: number) => {
     try {
       const updatedMeeting = await apiClient.startMeeting(meetingId) as Meeting;
-      // Refetch all meetings to ensure we have the latest state
       await fetchMeetings();
       return updatedMeeting;
     } catch (err) {
@@ -117,7 +115,6 @@ export function useMeetings() {
   const endMeeting = async (meetingId: number, summary?: string) => {
     try {
       const updatedMeeting = await apiClient.endMeeting(meetingId, summary) as Meeting;
-      // Refetch all meetings to ensure we have the latest state
       await fetchMeetings();
       return updatedMeeting;
     } catch (err) {

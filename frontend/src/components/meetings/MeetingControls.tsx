@@ -25,17 +25,14 @@ const MeetingControls = ({ meeting }: MeetingControlsProps) => {
   const isStudent = user?.role === 'student';
   const isSupervisor = user?.role === 'supervisor' || user?.role === 'director';
   
-  // Check if current user is a participant in this meeting
   const isParticipant = 
     (isStudent && meeting.student_id === user?.id) ||
     (isSupervisor && meeting.supervisor_id === user?.id);
 
-  // Only show controls if user is a participant
   if (!isParticipant) return null;
 
   return (
     <div className="flex gap-2 mt-2">
-      {/* Start Meeting button - available when meeting is ready to start */}
       {(isStudent || isSupervisor) && 
        (['SCHEDULED', 'PENDING'].includes(meeting.status?.toUpperCase() || '')) && 
        new Date(meeting.scheduled_at) <= new Date() && (

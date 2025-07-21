@@ -23,10 +23,8 @@ const MeetingInProgressCard = () => {
   const [summary, setSummary] = useState(meeting?.meeting_summary || '');
   const [lastSavedSummary, setLastSavedSummary] = useState(meeting?.meeting_summary || '');
 
-  // Check if current user can end the meeting (must be the supervisor of this meeting)
   const canEndMeeting = meeting && user && meeting.supervisor_id === user.id;
   
-  // Check if user can see this meeting
   const canViewMeeting = meeting && user && (
     user.role === 'director' || 
     meeting.student_id === user.id || 
@@ -49,7 +47,6 @@ const MeetingInProgressCard = () => {
     }
   }, [meeting?.meeting_summary]);
 
-  // Auto-save summary every 5 seconds if it changed
   useEffect(() => {
     if (!meeting || summary === lastSavedSummary) return;
     
@@ -60,7 +57,7 @@ const MeetingInProgressCard = () => {
       } catch (error) {
         console.error('Failed to save summary:', error);
       }
-    }, 2000); // Save after 2 seconds of no typing
+    }, 2000);
 
     return () => clearTimeout(saveTimeout);
   }, [summary, lastSavedSummary, meeting, updateMeetingSummary]);
@@ -95,7 +92,6 @@ const MeetingInProgressCard = () => {
         </div>
       </div>
       
-      {/* Meeting Summary Input */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Meeting Notes & Summary
@@ -112,7 +108,6 @@ const MeetingInProgressCard = () => {
         </div>
       </div>
 
-      {/* End Meeting Button (only for the supervisor of this meeting) */}
       {canEndMeeting && (
         <div className="flex justify-end">
           <button

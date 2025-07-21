@@ -9,18 +9,16 @@ import schemas
 from database import get_db, create_tables
 from auth import authenticate_user
 
-# Create tables on startup
 create_tables()
 
 app = FastAPI(title="Trackademic API", version="1.0.0")
 
-# Enable CORS for React frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:5173",
-        "http://localhost:8080",  # Alternative dev port
+        "http://localhost:8080",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -34,17 +32,14 @@ def read_root():
 
 
 def auto_mark_missed_meetings(db: Session):
-    """Automatically mark meetings as missed if they haven't started and time window has passed"""
     current_time = datetime.now()
     
-    # Find meetings that should be marked as missed
     meetings_to_update = db.query(models.Meeting).filter(
         models.Meeting.status.in_([models.MeetingStatus.PENDING, models.MeetingStatus.SCHEDULED]),
         models.Meeting.scheduled_at < current_time
     ).all()
     
     for meeting in meetings_to_update:
-        # Check if the meeting window (scheduled_at + duration) has passed
         meeting_end_time = meeting.scheduled_at + timedelta(minutes=meeting.duration_minutes)
         if current_time > meeting_end_time:
             meeting.status = models.MeetingStatus.MISSED

@@ -6,36 +6,26 @@ const UpcomingMeetingCard = () => {
   const { user } = useAuth();
   const { meetings, loading, error } = useMeetings();
 
-  // Filter for upcoming meetings and meetings ready to start
   const currentTime = new Date();
   const relevantMeetings = meetings.filter(meeting => {
-    // First filter by user access
     const isDirector = user?.role === 'director';
     const isUserMeeting = 
       meeting.student_id === user?.id || 
       meeting.supervisor_id === user?.id;
     
-    // Directors see all meetings, others only see their own
     if (!isDirector && !isUserMeeting) {
       return false;
     }
 
     const meetingTime = new Date(meeting.scheduled_at);
     const meetingEndTime = new Date(meetingTime.getTime() + (meeting.duration_minutes * 60 * 1000));
-    const status = (meeting.status || '').toLowerCase(); // Use lowercase for comparison
+    const status = (meeting.status || '').toLowerCase();
     
-    // Debug: log meeting details
-    console.log(`Meeting ${meeting.id}: scheduled=${meetingTime}, now=${currentTime}, endTime=${meetingEndTime}, status=${status}`);
-    
-    // Show if:
-    // 1. Future meeting (upcoming)
-    // 2. Meeting time has passed but not ended yet AND status is scheduled or pending (ready to start)
-    // 3. Not completed, missed, or in_progress (those show in other cards)
     return (
-      meetingTime > currentTime || // Future meetings
-      (currentTime >= meetingTime && currentTime <= meetingEndTime && ['scheduled', 'pending'].includes(status)) // Ready to start within duration window
+      meetingTime > currentTime ||
+      (currentTime >= meetingTime && currentTime <= meetingEndTime && ['scheduled', 'pending'].includes(status))
     ) && !['completed', 'missed', 'in_progress'].includes(status);
-  }).slice(0, 5); // Show only next 5 meetings
+  }).slice(0, 5);
 
   return (
     <div className='flex-col'>

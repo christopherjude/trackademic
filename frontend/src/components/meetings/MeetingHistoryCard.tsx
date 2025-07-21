@@ -26,18 +26,15 @@ const MeetingHistoryCard = () => {
 
   const allPastMeetings = fetchMeetingHistory();
   
-  // Filter meetings based on user role
   const pastMeetings = allPastMeetings.filter(meeting => {
     const isDirector = user?.role === 'director';
     const isUserMeeting = 
       meeting.student_id === user?.id || 
       meeting.supervisor_id === user?.id;
     
-    // Directors see all meetings, others only see their own
     return isDirector || isUserMeeting;
   });
 
-  // Helper function to determine display status
   const getDisplayStatus = (meeting: any) => {
     const meetingTime = new Date(meeting.scheduled_at);
     const meetingEndTime = new Date(meetingTime.getTime() + (meeting.duration_minutes * 60 * 1000));
