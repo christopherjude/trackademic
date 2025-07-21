@@ -14,7 +14,7 @@ function getElapsed(start: string) {
   return `${pad(h)}:${pad(m)}:${pad(s)}`;
 }
 
-const MeetingInProgressCard = ({ isSupervisor = false }: { isSupervisor?: boolean }) => {
+const MeetingInProgressCard = () => {
   const { user } = useAuth();
   const { getInProgressMeeting, endMeeting, updateMeetingSummary, refetch } = useMeetings();
   const meeting = getInProgressMeeting();
@@ -22,6 +22,9 @@ const MeetingInProgressCard = ({ isSupervisor = false }: { isSupervisor?: boolea
   const [ending, setEnding] = useState(false);
   const [summary, setSummary] = useState(meeting?.meeting_summary || '');
   const [lastSavedSummary, setLastSavedSummary] = useState(meeting?.meeting_summary || '');
+
+  // Check if current user can end the meeting (must be the supervisor of this meeting)
+  const canEndMeeting = meeting && user && meeting.supervisor_id === user.id;
 
   useEffect(() => {
     if (!meeting?.actual_start_time) return;
@@ -94,7 +97,7 @@ const MeetingInProgressCard = ({ isSupervisor = false }: { isSupervisor?: boolea
           value={summary}
           onChange={(e) => setSummary(e.target.value)}
           placeholder="Enter meeting notes, discussion points, decisions made, action items, etc..."
-          className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full text-black h-32 p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           maxLength={2000}
         />
         <div className="text-xs text-gray-500 mt-1">
@@ -102,8 +105,8 @@ const MeetingInProgressCard = ({ isSupervisor = false }: { isSupervisor?: boolea
         </div>
       </div>
 
-      {/* End Meeting Button (only for supervisor) */}
-      {isSupervisor && (
+      {/* End Meeting Button (only for the supervisor of this meeting) */}
+      {canEndMeeting && (
         <div className="flex justify-end">
           <button
             className="bg-red-600 text-white px-6 py-2 rounded-lg shadow hover:bg-red-700 disabled:opacity-50 font-medium"

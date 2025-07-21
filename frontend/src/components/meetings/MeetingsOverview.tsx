@@ -10,7 +10,6 @@ const MeetingsOverview = () => {
   const { user } = useAuth();
   const { getInProgressMeeting } = useMeetings();
   const inProgress = getInProgressMeeting();
-  const isSupervisor = user?.role === "supervisor";
 
   return (
     <div className="mt-8">
@@ -23,7 +22,7 @@ const MeetingsOverview = () => {
         {/* Show in-progress card at the top, full width */}
         {inProgress && (
           <div className="md:col-span-3">
-            <MeetingInProgressCard isSupervisor={isSupervisor} />
+            <MeetingInProgressCard />
           </div>
         )}
         <UpcomingMeetingCard />
