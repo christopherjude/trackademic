@@ -1,15 +1,15 @@
-import { useMsal } from "@azure/msal-react"
+import { useAuth } from "../context/AuthContext"
 import { Navigate, useLocation } from "react-router-dom"
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { inProgress, accounts } = useMsal()
+  const { user, isLoading } = useAuth()
   const location = useLocation()
 
-  if (inProgress !== "none") {
+  if (isLoading) {
     return <div>Loading authentication…</div>
   }
 
-  if (accounts.length === 0) {
+  if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 

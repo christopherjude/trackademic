@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import {
     FaTachometerAlt,
     FaUserGraduate,
@@ -17,7 +17,6 @@ const navItems: Record<Role, { icon: React.ReactNode; label: string }[]> = {
     student: [
         { icon: <FaTachometerAlt />, label: "Dashboard" },
         { icon: <FaUserGraduate />, label: "Meetings" },
-        { icon: <FaChartPie />, label: "Milestones" },
     ],
     supervisor: [
         { icon: <FaTachometerAlt />, label: "Dashboard" },
@@ -32,13 +31,13 @@ const navItems: Record<Role, { icon: React.ReactNode; label: string }[]> = {
     ],
 };
 
-const Sidebar: React.FC<SidebarProps> = ({ role }) => {
+const Sidebar: React.FC<SidebarProps> = ({ role }: SidebarProps) => {
     return (
         <div className="p-2">
             <aside className="w-64 h-full bg-background-light text-black p-6 space-y-6 rounded-md">
                 <div className="text-2xl font-bold">Trackademic</div>
                 <nav className="space-y-3">
-                    {navItems[role].map((item, idx) => (
+                    {navItems[role].map((item: { icon: React.ReactNode; label: string }, idx: number) => (
                         <div
                             key={idx}
                             className="flex items-center gap-3 hover:text-primary cursor-pointer"

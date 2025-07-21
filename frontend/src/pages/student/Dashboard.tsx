@@ -20,10 +20,10 @@ const StudentDashboard = () => {
     <DashboardLayout
       role={user.role}
       user={{
-        firstName: user.firstName,
-        lastName: user.lastName,
+        firstName: user.first_name,
+        lastName: user.last_name,
         role: user.role.charAt(0).toUpperCase() + user.role.slice(1),
-        avatarUrl: user.avatarUrl
+        avatarUrl: "/avatar.png" // Default avatar
       }}
     >
       <MeetingsOverview />

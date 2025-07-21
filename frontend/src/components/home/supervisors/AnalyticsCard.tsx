@@ -32,7 +32,7 @@ const AnalyticsCard = () => {
 
   return (
     <div className="card h-[208px]">
-      <h3 className="text-lg font-semibold text-primary mb-4">Milestone Completion</h3>
+      <h3 className="text-lg font-semibold text-primary mb-4">Meeting Completion</h3>
       <div className="flex items-center justify-between gap-6">
         {/* Legend */}
         <div className="space-y-2 text-sm text-secondary">

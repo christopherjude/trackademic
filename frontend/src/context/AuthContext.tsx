@@ -1,107 +1,71 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { useMsal } from "@azure/msal-react";
-import { AccountInfo } from "@azure/msal-browser";
-import { createApiClient } from "../services/apiClient";
+import React, { createContext, useContext, useState } from "react";
+import apiClient from "../services/apiClient";
 
 interface User {
   id: number;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
   role: "student" | "supervisor" | "director";
-  avatarUrl?: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  apiClient: any;
+  login: (email: string, password: string) => Promise<boolean>;
+  logout: () => void;
+  isLoading: boolean;
 }
 
-const AuthContext = createContext<AuthContextType>({ user: null, apiClient: null });
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  login: async () => false,
+  logout: () => {},
+  isLoading: false,
+});
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const { instance, accounts } = useMsal();
   const [user, setUser] = useState<User | null>(null);
-  const [apiClient, setApiClient] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (accounts.length > 0) {
-        const account: AccountInfo = accounts[0];
-        
-        // Create API client with MSAL integration
-        const client = createApiClient(instance, account);
-        setApiClient(client);
+  const login = async (email: string, password: string): Promise<boolean> => {
+    setIsLoading(true);
+    try {
+      const userData = await apiClient.login(email, password);
+      setUser(userData);
+      
+      // Store user ID in localStorage for simple session management
+      localStorage.setItem('currentUserId', userData.id.toString());
+      
+      return true;
+    } catch (error) {
+      console.error('Login failed:', error);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-        try {
-          // Fetch full user data from backend
-          const userData = await client.getCurrentUser() as {
-            id: number;
-            first_name: string;
-            last_name: string;
-            email: string;
-            role: "student" | "supervisor" | "director";
-          };
-          
-          setUser({
-            id: userData.id,
-            firstName: userData.first_name,
-            lastName: userData.last_name,
-            email: userData.email,
-            role: userData.role,
-            avatarUrl: "/avatar.png",
-          });
-        } catch (error) {
-          console.error("Failed to fetch user data:", error);
-          // Fallback to Azure AD token data if API call fails
-          const fullName = account.name || "";
-          const [firstName, ...rest] = fullName.split(" "); 
-          const lastName = rest.join(" ");
-          const email = account.username;
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('currentUserId');
+  };
 
-          // Get roles from ID token claims
-          let role: "student" | "supervisor" | "director" = "student"; // default
-          
-          if (account.idTokenClaims && account.idTokenClaims.roles) {
-            const roles = account.idTokenClaims.roles as string[];
-            
-            if (roles.includes("Director")) {
-              role = "director";
-            } else if (roles.includes("Supervisor")) {
-              role = "supervisor";
-            } else if (roles.includes("Student")) {
-              role = "student";
-            }
-          }
-
-          // Debug: Log user info and token claims
-          console.log("[AuthContext] Signed-in user:", {
-            name: fullName,
-            email,
-            role,
-            idTokenClaims: account.idTokenClaims
-          });
-
-          setUser({
-            id: 0, // Fallback ID when backend is unavailable
-            firstName,
-            lastName,
-            email,
-            avatarUrl: "/avatar.png",
-            role,
-          });
-        }
-      } else {
-        setUser(null);
-        setApiClient(null);
-      }
-    };
-
-    fetchUserData();
-  }, [instance, accounts]);
+  // Check for existing session on mount
+  React.useEffect(() => {
+    const savedUserId = localStorage.getItem('currentUserId');
+    if (savedUserId && !user) {
+      // Optionally fetch user data from backend
+      apiClient.getCurrentUser(parseInt(savedUserId))
+        .then((userData: User) => setUser(userData))
+        .catch(() => {
+          // If fetching fails, clear the stored ID
+          localStorage.removeItem('currentUserId');
+        });
+    }
+  }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, apiClient }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

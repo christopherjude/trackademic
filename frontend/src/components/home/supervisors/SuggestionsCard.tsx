@@ -1,7 +1,7 @@
 const SuggestionsCard = () => {
   const actions = [
     { label: "Schedule follow-up with Chris", icon: "📌" },
-    { label: "Review Jenny's milestone report", icon: "📄" },
+    { label: "Review Jenny's meeting report", icon: "📄" },
   ];
 
   return (

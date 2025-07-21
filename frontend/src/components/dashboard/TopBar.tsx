@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useMsal } from "@azure/msal-react";
+import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 interface TopbarProps {
@@ -12,7 +12,7 @@ interface TopbarProps {
 const Topbar: React.FC<TopbarProps> = ({ firstName, lastName, role, avatarUrl }) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const { instance } = useMsal();
+    const { logout } = useAuth();
     const navigate = useNavigate();
 
     // Close dropdown when clicking outside
@@ -31,12 +31,10 @@ const Topbar: React.FC<TopbarProps> = ({ firstName, lastName, role, avatarUrl })
 
     const handleLogout = async () => {
         try {
-            await instance.logoutRedirect({
-                postLogoutRedirectUri: import.meta.env.VITE_APP_URL || window.location.origin,
-            });
+            logout();
+            navigate("/");
         } catch (error) {
             console.error("Logout failed:", error);
-            // Fallback: redirect to home page
             navigate("/");
         }
     };

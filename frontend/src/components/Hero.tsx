@@ -9,7 +9,7 @@ const Hero = () => {
           Empowering Academic Success
         </span>
         <h1 className="text-6xl font-bold text-primary mt-6">
-          Stay on track, hit milestones and excel in your final year projects
+          Stay on track and excel in your final year projects
         </h1>
         <p className="text-secondary text-lg mt-4 max-w-96">
           Efficiently manage meetings, track progress, and gain insights into your academic journey with AI-powered analytics.
@@ -57,7 +57,7 @@ const Hero = () => {
           <h3 className="text-lg font-semibold text-background-light">AI-Powered Insights</h3>
           <p className="text-background-light text-sm mt-4">Understand your progress</p>
           <div className="text-background-light text-4xl font-bold mt-4">+20%</div>
-          <p className="text-background-light text-sm mt-2">Improvement in milestone completion rates.</p>
+          <p className="text-background-light text-sm mt-2">Improvement in project completion rates.</p>
         </div>
       </div>
     </section>

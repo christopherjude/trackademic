@@ -5,7 +5,7 @@ const notifications = [
   },
   {
     name: "Jenny",
-    message: "hit her Week 3 milestone!",
+    message: "completed her Week 3 meeting!",
   },
 ];
 

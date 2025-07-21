@@ -1,4 +1,3 @@
-import MilestonesCard from "./MilestonesCard";
 import MeetingsCard from "./MeetingsCard";
 import ActionablesCard from "./ActionablesCard";
 
@@ -11,9 +10,8 @@ const StudentsSection = () => {
       </h2>
 
       {/* Cards Container */}
-      <div className="mx-auto max-w-7xl grid grid-cols-1 md:grid-cols-3 gap-6 justify-items-center">
+      <div className="mx-auto max-w-7xl grid grid-cols-1 md:grid-cols-2 gap-6 justify-items-center">
         <MeetingsCard />
-        <MilestonesCard />
         <ActionablesCard />
       </div>
     </section>
