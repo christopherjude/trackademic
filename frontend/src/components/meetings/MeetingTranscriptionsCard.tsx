@@ -3,14 +3,13 @@ import { useMeetings } from "../../hooks/useMeetings";
 const MeetingTranscriptionsCard = () => {
   const { meetings, loading, error } = useMeetings();
 
-  // Filter for completed meetings that would have transcriptions
+  // Filter for completed meetings only
   const completedMeetings = meetings
     .filter(meeting => 
-      meeting.status?.toLowerCase() === 'completed' || 
-      new Date(meeting.scheduled_at) < new Date()
+      meeting.status?.toUpperCase() === 'COMPLETED'
     )
     .sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime())
-    .slice(0, 5); // Show only last 5 meetings
+    .slice(0, 5); // Show only last 5 completed meetings
 
   return (
     <div className="flex-col w-full">

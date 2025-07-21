@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, Form, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import models
 import schemas
@@ -31,6 +31,29 @@ app.add_middleware(
 @app.get("/")
 def read_root():
     return {"message": "Trackademic API is running locally!"}
+
+
+def auto_mark_missed_meetings(db: Session):
+    """Automatically mark meetings as missed if they haven't started and time window has passed"""
+    current_time = datetime.now()
+    
+    # Find meetings that should be marked as missed
+    meetings_to_update = db.query(models.Meeting).filter(
+        models.Meeting.status.in_([models.MeetingStatus.PENDING, models.MeetingStatus.SCHEDULED]),
+        models.Meeting.scheduled_at < current_time
+    ).all()
+    
+    for meeting in meetings_to_update:
+        # Check if the meeting window (scheduled_at + duration) has passed
+        meeting_end_time = meeting.scheduled_at + timedelta(minutes=meeting.duration_minutes)
+        if current_time > meeting_end_time:
+            meeting.status = models.MeetingStatus.MISSED
+            print(f"Auto-marking meeting {meeting.id} as missed (was {meeting.status})")
+    
+    if meetings_to_update:
+        db.commit()
+    
+    return len([m for m in meetings_to_update if m.status == models.MeetingStatus.MISSED])
 
 
 # Authentication routes
@@ -88,6 +111,11 @@ def get_students(db: Session = Depends(get_db)):
 @app.get("/api/meetings", response_model=List[schemas.Meeting])
 def get_meetings(db: Session = Depends(get_db)):
     """Get all meetings - simplified for localhost"""
+    # First, automatically mark any missed meetings
+    missed_count = auto_mark_missed_meetings(db)
+    if missed_count > 0:
+        print(f"Auto-marked {missed_count} meetings as missed")
+    
     meetings = db.query(models.Meeting).all()
     return meetings
 
@@ -98,7 +126,15 @@ def create_meeting(
     db: Session = Depends(get_db)
 ):
     """Create a new meeting"""
-    db_meeting = models.Meeting(**meeting.dict())
+    meeting_data = meeting.dict()
+    meeting_data['status'] = models.MeetingStatus.SCHEDULED  # Explicitly set status to SCHEDULED
+    
+    # Handle datetime string from frontend (keep it simple)
+    if isinstance(meeting_data['scheduled_at'], str):
+        # If it's a string like "2024-01-01T10:00", parse it as local time
+        meeting_data['scheduled_at'] = datetime.fromisoformat(meeting_data['scheduled_at'].replace('Z', ''))
+    
+    db_meeting = models.Meeting(**meeting_data)
     db.add(db_meeting)
     db.commit()
     db.refresh(db_meeting)

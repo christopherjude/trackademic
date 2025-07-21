@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useMeetings } from "../../hooks/useMeetings";
 import { useAuth } from "../../context/AuthContext";
+import { apiClient } from "../../services/apiClient";
 
 interface ScheduleMeetingModalProps {
   isOpen: boolean;
@@ -16,7 +17,7 @@ interface Student {
 }
 
 const ScheduleMeetingModal = ({ isOpen, onClose, selectedStudentId }: ScheduleMeetingModalProps) => {
-  const { user, apiClient } = useAuth();
+  const { user } = useAuth();
   const { createMeeting, loading } = useMeetings();
   const [students, setStudents] = useState<Student[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(false);
@@ -33,10 +34,10 @@ const ScheduleMeetingModal = ({ isOpen, onClose, selectedStudentId }: ScheduleMe
   // Fetch students when modal opens
   useEffect(() => {
     const fetchStudents = async () => {
-      if (isOpen && apiClient) {
+      if (isOpen) {
         setLoadingStudents(true);
         try {
-          const studentsData = await apiClient.getStudents();
+          const studentsData = await apiClient.getStudents() as Student[];
           setStudents(studentsData);
         } catch (error) {
           console.error('Failed to fetch students:', error);
@@ -47,7 +48,7 @@ const ScheduleMeetingModal = ({ isOpen, onClose, selectedStudentId }: ScheduleMe
     };
 
     fetchStudents();
-  }, [isOpen, apiClient]);
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +67,7 @@ const ScheduleMeetingModal = ({ isOpen, onClose, selectedStudentId }: ScheduleMe
         ...formData,
         student_id: parseInt(formData.student_id.toString()),
         supervisor_id: user.id,
-        scheduled_at: new Date(formData.scheduled_at).toISOString(),
+        scheduled_at: formData.scheduled_at, // Keep it simple - no timezone conversion
       });
       
       onClose();
@@ -87,37 +88,37 @@ const ScheduleMeetingModal = ({ isOpen, onClose, selectedStudentId }: ScheduleMe
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Schedule New Meeting</h2>
+      <div className="bg-background-light rounded-lg shadow-xl p-8 w-full max-w-md mx-4">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-primary">Schedule New Meeting</h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-secondary hover:text-primary hover:bg-surface-light rounded-lg p-2 transition-all text-xl"
           >
             ✕
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium mb-1">Meeting Title</label>
+            <label className="block text-sm font-medium text-primary mb-2">Meeting Title</label>
             <input
               type="text"
               required
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full p-2 border rounded-md"
+              className="w-full px-4 py-3 text-primary bg-white border border-neutral-light rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               placeholder="e.g., Weekly Progress Review"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Student</label>
+            <label className="block text-sm font-medium text-primary mb-2">Student</label>
             <select
               required
               value={formData.student_id}
               onChange={(e) => setFormData({ ...formData, student_id: parseInt(e.target.value) })}
-              className="w-full p-2 border rounded-md"
+              className="w-full px-4 py-3 text-primary bg-white border border-neutral-light rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               disabled={loadingStudents}
             >
               <option value="">
@@ -132,23 +133,35 @@ const ScheduleMeetingModal = ({ isOpen, onClose, selectedStudentId }: ScheduleMe
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Date & Time</label>
-            <input
-              type="datetime-local"
-              required
-              value={formData.scheduled_at}
-              onChange={(e) => setFormData({ ...formData, scheduled_at: e.target.value })}
-              className="w-full p-2 border rounded-md"
-              min={new Date().toISOString().slice(0, 16)}
-            />
+            <label className="block text-sm font-medium text-primary mb-2">Date & Time</label>
+            <div className="relative">
+              <input
+                type="datetime-local"
+                required
+                value={formData.scheduled_at}
+                onChange={(e) => setFormData({ ...formData, scheduled_at: e.target.value })}
+                className="w-full px-4 py-3 text-primary bg-white border border-neutral-light rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                style={{
+                  colorScheme: 'light',
+                  WebkitAppearance: 'none',
+                  MozAppearance: 'textfield'
+                }}
+                min={new Date().toISOString().slice(0, 16)}
+              />
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Duration (minutes)</label>
+            <label className="block text-sm font-medium text-primary mb-2">Duration (minutes)</label>
             <select
               value={formData.duration_minutes}
               onChange={(e) => setFormData({ ...formData, duration_minutes: parseInt(e.target.value) })}
-              className="w-full p-2 border rounded-md"
+              className="w-full px-4 py-3 text-primary bg-white border border-neutral-light rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
             >
               <option value={30}>30 minutes</option>
               <option value={60}>1 hour</option>
@@ -158,39 +171,39 @@ const ScheduleMeetingModal = ({ isOpen, onClose, selectedStudentId }: ScheduleMe
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Location</label>
+            <label className="block text-sm font-medium text-primary mb-2">Location</label>
             <input
               type="text"
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              className="w-full p-2 border rounded-md"
+              className="w-full px-4 py-3 text-primary bg-white border border-neutral-light rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               placeholder="e.g., Office 204, Video Call, etc."
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Description (Optional)</label>
+            <label className="block text-sm font-medium text-primary mb-2">Description (Optional)</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full p-2 border rounded-md"
+              className="w-full px-4 py-3 text-primary bg-white border border-neutral-light rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
               rows={3}
               placeholder="Agenda, topics to discuss, etc."
             />
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-4 pt-6">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+              className="flex-1 px-6 py-3 text-secondary bg-white border border-neutral-light rounded-lg hover:bg-surface-light hover:text-primary transition-all font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+              className="flex-1 px-6 py-3 bg-primary text-background-light rounded-lg hover:bg-secondary transition-all font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Scheduling...' : 'Schedule Meeting'}
             </button>

@@ -4,10 +4,25 @@ import MeetingControls from "./MeetingControls";
 const UpcomingMeetingCard = () => {
   const { meetings, loading, error } = useMeetings();
 
-  // Filter for upcoming meetings (future dates)
-  const upcomingMeetings = meetings.filter(meeting => 
-    new Date(meeting.scheduled_at) > new Date()
-  ).slice(0, 5); // Show only next 5 meetings
+  // Filter for upcoming meetings and meetings ready to start
+  const currentTime = new Date();
+  const relevantMeetings = meetings.filter(meeting => {
+    const meetingTime = new Date(meeting.scheduled_at);
+    const meetingEndTime = new Date(meetingTime.getTime() + (meeting.duration_minutes * 60 * 1000));
+    const status = (meeting.status || '').toLowerCase(); // Use lowercase for comparison
+    
+    // Debug: log meeting details
+    console.log(`Meeting ${meeting.id}: scheduled=${meetingTime}, now=${currentTime}, endTime=${meetingEndTime}, status=${status}`);
+    
+    // Show if:
+    // 1. Future meeting (upcoming)
+    // 2. Meeting time has passed but not ended yet AND status is scheduled or pending (ready to start)
+    // 3. Not completed, missed, or in_progress (those show in other cards)
+    return (
+      meetingTime > currentTime || // Future meetings
+      (currentTime >= meetingTime && currentTime <= meetingEndTime && ['scheduled', 'pending'].includes(status)) // Ready to start within duration window
+    ) && !['completed', 'missed', 'in_progress'].includes(status);
+  }).slice(0, 5); // Show only next 5 meetings
 
   return (
     <div className='flex-col'>
@@ -17,11 +32,11 @@ const UpcomingMeetingCard = () => {
           <div className="text-gray-500">Loading meetings...</div>
         ) : error ? (
           <div className="text-red-500">Error: {error}</div>
-        ) : upcomingMeetings.length === 0 ? (
+        ) : relevantMeetings.length === 0 ? (
           <div className="text-gray-500">No upcoming meetings</div>
         ) : (
           <div className="space-y-4">
-            {upcomingMeetings.map((meeting) => (
+            {relevantMeetings.map((meeting) => (
               <div key={meeting.id} className="border-b border-gray-200 pb-3 last:border-b-0">
                 <h3 className="font-semibold text-primary">{meeting.title}</h3>
                 <p className="text-sm text-gray-600 mt-1">{meeting.description}</p>
@@ -31,12 +46,20 @@ const UpcomingMeetingCard = () => {
                     {new Date(meeting.scheduled_at).toLocaleTimeString([], { 
                       hour: '2-digit', 
                       minute: '2-digit' 
-                    })}
+                    })}z  
                   </span>
-                  <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">
-                    {meeting.status === 'student_checked_in' ? 'Student Checked In' : 
-                     meeting.status === 'confirmed' ? 'Confirmed' :
-                     meeting.status || 'Pending'}
+                  <span className={`px-2 py-1 text-xs rounded ${
+                    new Date(meeting.scheduled_at) <= new Date() && ['SCHEDULED', 'PENDING'].includes(meeting.status?.toUpperCase() || '') 
+                      ? 'bg-green-100 text-green-800' 
+                      : meeting.status === 'student_checked_in' ? 'bg-blue-100 text-blue-800' : 
+                        meeting.status === 'confirmed' ? 'bg-purple-100 text-purple-800' :
+                        'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {new Date(meeting.scheduled_at) <= new Date() && ['SCHEDULED', 'PENDING'].includes(meeting.status?.toUpperCase() || '') 
+                      ? 'Ready to Start' 
+                      : meeting.status === 'student_checked_in' ? 'Student Checked In' : 
+                        meeting.status === 'confirmed' ? 'Confirmed' :
+                        meeting.status || 'Scheduled'}
                   </span>
                 </div>
                 <MeetingControls meeting={meeting} />

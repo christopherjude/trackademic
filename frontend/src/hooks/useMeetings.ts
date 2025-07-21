@@ -116,9 +116,18 @@ export function useMeetings() {
   const fetchMeetingHistory = () => {
     return meetings
       .filter(meeting => {
-        const isPast = new Date(meeting.scheduled_at) < new Date();
+        const meetingTime = new Date(meeting.scheduled_at);
+        const meetingEndTime = new Date(meetingTime.getTime() + (meeting.duration_minutes * 60 * 1000));
+        const now = new Date();
         const status = (meeting.status || '').toLowerCase();
-        return isPast && (status === 'completed' || status === 'missed');
+        
+        // Include meetings that are:
+        // 1. Explicitly completed or missed
+        // 2. Past meetings that haven't been started (pending/scheduled past their time window)
+        const isExplicitlyFinished = status === 'completed' || status === 'missed';
+        const isPastTimeWindow = now > meetingEndTime && (status === 'pending' || status === 'scheduled');
+        
+        return isExplicitlyFinished || isPastTimeWindow;
       })
       .sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime())
       .slice(0, 10);

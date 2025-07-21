@@ -24,6 +24,21 @@ const MeetingHistoryCard = () => {
 
   const pastMeetings = fetchMeetingHistory();
 
+  // Helper function to determine display status
+  const getDisplayStatus = (meeting: any) => {
+    const meetingTime = new Date(meeting.scheduled_at);
+    const meetingEndTime = new Date(meetingTime.getTime() + (meeting.duration_minutes * 60 * 1000));
+    const now = new Date();
+    const status = (meeting.status || '').toLowerCase();
+    
+    // If meeting time window has passed and it's still pending/scheduled, treat as missed
+    if ((status === 'pending' || status === 'scheduled') && now > meetingEndTime) {
+      return 'missed';
+    }
+    
+    return status;
+  };
+
   return (
     <div className="flex-col">
       <h3 className="text-xl font-semibold text-primary mb-4">Meeting History</h3>
@@ -58,10 +73,15 @@ const MeetingHistoryCard = () => {
                     </div>
                   )}
                 </div>
-                <span className={`px-3 py-1 rounded-md text-sm ${getStatusColor(meeting.status || 'completed')}`}>
-                  {meeting.status === 'student_checked_in' ? 'Student Checked In' : 
-                   meeting.status === 'confirmed' ? 'Confirmed' :
-                   meeting.status || 'Completed'}
+                <span className={`px-3 py-1 rounded-md text-sm ${getStatusColor(getDisplayStatus(meeting))}`}>
+                  {(() => {
+                    const displayStatus = getDisplayStatus(meeting);
+                    if (displayStatus === 'student_checked_in') return 'Student Checked In';
+                    if (displayStatus === 'confirmed') return 'Confirmed';
+                    if (displayStatus === 'missed') return 'Missed';
+                    if (displayStatus === 'completed') return 'Completed';
+                    return displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1);
+                  })()}
                 </span>
               </li>
             ))}
