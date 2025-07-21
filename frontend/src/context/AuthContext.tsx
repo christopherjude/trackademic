@@ -14,6 +14,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
+  isInitializing: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -21,16 +22,18 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => false,
   logout: () => {},
   isLoading: false,
+  isInitializing: true,
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
-      const userData = await apiClient.login(email, password);
+      const userData = await apiClient.login(email, password) as User;
       setUser(userData);
       
       // Store user ID in localStorage for simple session management
@@ -52,20 +55,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Check for existing session on mount
   React.useEffect(() => {
-    const savedUserId = localStorage.getItem('currentUserId');
-    if (savedUserId && !user) {
-      // Optionally fetch user data from backend
-      apiClient.getCurrentUser(parseInt(savedUserId))
-        .then((userData: User) => setUser(userData))
-        .catch(() => {
+    const checkExistingSession = async () => {
+      const savedUserId = localStorage.getItem('currentUserId');
+      if (savedUserId) {
+        try {
+          const userData = await apiClient.getCurrentUser(parseInt(savedUserId)) as User;
+          setUser(userData);
+        } catch (error) {
+          console.error('Failed to restore session:', error);
           // If fetching fails, clear the stored ID
           localStorage.removeItem('currentUserId');
-        });
-    }
-  }, [user]);
+        }
+      }
+      setIsInitializing(false);
+    };
+
+    checkExistingSession();
+  }, []); // Empty dependency array - only run on mount
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoading, isInitializing }}>
       {children}
     </AuthContext.Provider>
   );
