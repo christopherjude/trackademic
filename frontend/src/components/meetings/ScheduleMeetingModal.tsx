@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useMeetings } from "../../hooks/useMeetings";
 import { useAuth } from "../../context/AuthContext";
 import { apiClient } from "../../services/apiClient";
+import { User } from '../../types/auth';
 
 interface ScheduleMeetingModalProps {
   isOpen: boolean;
@@ -9,17 +10,10 @@ interface ScheduleMeetingModalProps {
   selectedStudentId?: number;
 }
 
-interface Student {
-  id: number;
-  first_name: string;
-  last_name: string;
-  email: string;
-}
-
 const ScheduleMeetingModal = ({ isOpen, onClose, selectedStudentId }: ScheduleMeetingModalProps) => {
   const { user } = useAuth();
   const { createMeeting, loading } = useMeetings();
-  const [students, setStudents] = useState<Student[]>([]);
+  const [students, setStudents] = useState<User[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -36,7 +30,7 @@ const ScheduleMeetingModal = ({ isOpen, onClose, selectedStudentId }: ScheduleMe
       if (isOpen) {
         setLoadingStudents(true);
         try {
-          const studentsData = await apiClient.getStudents() as Student[];
+          const studentsData = await apiClient.getStudents() as User[];
           setStudents(studentsData);
         } catch (error) {
           console.error('Failed to fetch students:', error);
