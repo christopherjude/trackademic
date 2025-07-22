@@ -1,5 +1,5 @@
-import { useMeetings } from "../../hooks/useMeetings";
-import { useAuth } from "../../context/AuthContext";
+import { useMeetings } from "../hooks/useMeetings";
+import { useAuth } from "../../../context/AuthContext";
 import MeetingControls from "./MeetingControls";
 
 const UpcomingMeetingCard = () => {

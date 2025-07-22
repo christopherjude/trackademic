@@ -1,5 +1,5 @@
-import { useMeetings } from "../../hooks/useMeetings";
-import { useAuth } from "../../context/AuthContext";
+import { useMeetings } from "../hooks/useMeetings";
+import { useAuth } from "../../../context/AuthContext";
 
 const MeetingTranscriptionsCard = () => {
   const { user } = useAuth();
@@ -18,7 +18,7 @@ const MeetingTranscriptionsCard = () => {
       
       return isDirector || isUserMeeting;
     })
-    .sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime())
+    .sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime());
 
   return (
     <div className="flex-col w-full">
